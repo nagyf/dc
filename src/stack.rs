@@ -100,6 +100,21 @@ impl Stack {
         })
     }
 
+    pub fn sqrt(&mut self) -> Result<(), String> {
+        self.arg1_f64().map(|x| {
+            self.push(StackValue::Number(x.sqrt()));
+        })
+    }
+
+    fn arg1_f64(&mut self) -> Result<f64, String> {
+        if self.stack.len() >= 1 {
+            let StackValue::Number(x) = self.stack.pop_back().unwrap();
+            Ok( x )
+        } else {
+            Err("stack empty!".to_owned())
+        }
+    }
+
     fn arg2_f64(&mut self) -> Result<(f64, f64), String> {
         if self.stack.len() >= 2 {
             let StackValue::Number(y) = self.stack.pop_back().unwrap();

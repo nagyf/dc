@@ -110,6 +110,12 @@ fn process_op(stack: &mut Stack, op: &Op) -> OpResult {
             });
             OpResult::Ok
         }
+        Op::Sqrt => {
+            stack.sqrt().map_err(|error| {
+                println!("{}", error);
+            });
+            OpResult::Ok
+        }
         Op::Push(num) => {
             stack.push(StackValue::Number(*num));
             OpResult::Ok
