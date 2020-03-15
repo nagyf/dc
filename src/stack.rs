@@ -1,7 +1,7 @@
 use std::collections::LinkedList;
 use std::fmt;
 use std::collections::linked_list::Iter;
-use std::ops::{Rem, Div};
+use std::ops::Div;
 
 #[derive(Debug, Copy, Clone)]
 pub enum StackValue {
@@ -124,7 +124,7 @@ impl Stack {
                     self.push(StackValue::Number(0f64));
                 } else {
                     let mut c = 1;
-                    for e_prime in 0..=(exponent-1) {
+                    for _e_prime in 0..=(exponent-1) {
                         c = (c * base) % modulus;
                     }
                     self.push(StackValue::Number(c as f64));

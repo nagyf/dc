@@ -1,4 +1,4 @@
-use dc::stack::{Stack, StackValue};
+use dc::stack::Stack;
 use dc::{process_input, OpResult};
 
 fn main() {
@@ -7,7 +7,7 @@ fn main() {
     let stdin = std::io::stdin();
     loop {
         buffer.clear();
-        stdin.read_line(&mut buffer);
+        stdin.read_line(&mut buffer).unwrap();
 
         match process_input(&mut stack, buffer.trim().to_lowercase().as_ref()) {
             Ok(result) => {

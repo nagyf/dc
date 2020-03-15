@@ -14,117 +14,87 @@ pub fn process_input(stack: &mut Stack, str: &str) -> Result<OpResult, String> {
     let tokens = tokenize(str)?;
     for op in tokens {
         match process_op(stack, &op) {
-            OpResult::Exit => return Ok(OpResult::Exit),
-            _ => ()
+            Ok(OpResult::Exit) => return Ok(OpResult::Exit),
+            Ok(_) => (),
+            Err(err) => println!("{}", err)
         };
     }
 
     Ok(OpResult::Ok)
 }
 
-fn process_op(stack: &mut Stack, op: &Op) -> OpResult {
+fn process_op(stack: &mut Stack, op: &Op) -> Result<OpResult, String> {
     match op {
         Op::Exit => {
-            OpResult::Exit
+            Ok(OpResult::Exit)
         }
         Op::PrintPeek => {
-            stack.peek().map(|value| {
-                println!("{}", value);
-            }).or_else(|| {
-                println!("stack empty!");
-                None
-            });
-            OpResult::Ok
+            stack.peek()
+                .map(|value| {
+                    println!("{}", value);
+                    OpResult::Ok
+                })
+                .ok_or("stack empty!".to_owned())
         }
         Op::Clear => {
             stack.clear();
-            OpResult::Ok
+            Ok(OpResult::Ok)
         }
         Op::PrintAll => {
             stack.iter().for_each(|value| println!("{}", value));
-            OpResult::Ok
+            Ok(OpResult::Ok)
         }
         Op::PrintPop => {
             stack.pop().map(|value| {
                 print!("{}", value);
-                std::io::stdout().flush();
-            }).or_else(|| {
-                println!("stack empty");
-                None
-            });
-            OpResult::Ok
+                std::io::stdout().flush().unwrap();
+                OpResult::Ok
+            }).ok_or("stack empty!".to_owned())
         }
         Op::Duplicate => {
             let value = stack.peek().and_then(|value| {
                 match value {
-                    StackValue::Number(num) => Some(num),
-                    _ => None
+                    StackValue::Number(num) => Some(num)
                 }
             });
 
             if let Some(num) = value {
-                stack.push(StackValue::Number(*num));
+                let stack_value = StackValue::Number(*num);
+                stack.push(stack_value);
             }
 
-            OpResult::Ok
+            Ok(OpResult::Ok)
         }
         Op::Add => {
-            stack.add().map_err(|error| {
-                println!("{}", error);
-            });
-            OpResult::Ok
+            stack.add().and(Ok(OpResult::Ok))
         }
         Op::Sub => {
-            stack.sub().map_err(|error| {
-                println!("{}", error);
-            });
-            OpResult::Ok
+            stack.sub().and(Ok(OpResult::Ok))
         }
         Op::Mul => {
-            stack.mul().map_err(|error| {
-                println!("{}", error);
-            });
-            OpResult::Ok
+            stack.mul().and(Ok(OpResult::Ok))
         }
         Op::Div => {
-            stack.div().map_err(|error| {
-                println!("{}", error);
-            });
-            OpResult::Ok
+            stack.div().and(Ok(OpResult::Ok))
         }
         Op::Mod => {
-            stack.modulo().map_err(|error| {
-                println!("{}", error);
-            });
-            OpResult::Ok
+            stack.modulo().and(Ok(OpResult::Ok))
         }
         Op::DivRem => {
-            stack.div_rem().map_err(|error| {
-                println!("{}", error);
-            });
-            OpResult::Ok
+            stack.div_rem().and(Ok(OpResult::Ok))
         }
         Op::Exp => {
-            stack.exp().map_err(|error| {
-                println!("{}", error);
-            });
-            OpResult::Ok
+            stack.exp().and(Ok(OpResult::Ok))
         }
         Op::Sqrt => {
-            stack.sqrt().map_err(|error| {
-                println!("{}", error);
-            });
-            OpResult::Ok
+            stack.sqrt().and(Ok(OpResult::Ok))
         }
         Op::ModExp => {
-            stack.mod_exp().map_err(|error| {
-                println!("{}", error);
-            });
-            OpResult::Ok
+            stack.mod_exp().and(Ok(OpResult::Ok))
         }
         Op::Push(num) => {
             stack.push(StackValue::Number(*num));
-            OpResult::Ok
+            Ok(OpResult::Ok)
         }
     }
 }
