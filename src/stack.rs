@@ -106,6 +106,32 @@ impl Stack {
         })
     }
 
+    pub fn mod_exp(&mut self) -> Result<(), String> {
+        self.arg3_f64()
+            .and_then(|(base, exponent, modulus)| {
+                if modulus <= 0.0 || modulus != modulus.trunc() {
+                    Err("base must be non-zero and an integer".to_owned())
+                } else if exponent < 0.0 {
+                    Err("exponent must be non-negative and an integer".to_owned())
+                } else if base != base.trunc() {
+                    Err("modulus must be an integer".to_owned())
+                } else {
+                    Ok((base as i64, exponent as i64, modulus as i64))
+                }
+            })
+            .map(|(base, exponent, modulus)| {
+                if modulus == 1 {
+                    self.push(StackValue::Number(0f64));
+                } else {
+                    let mut c = 1;
+                    for e_prime in 0..=(exponent-1) {
+                        c = (c * base) % modulus;
+                    }
+                    self.push(StackValue::Number(c as f64));
+                }
+            })
+    }
+
     fn arg1_f64(&mut self) -> Result<f64, String> {
         if self.stack.len() >= 1 {
             let StackValue::Number(x) = self.stack.pop_back().unwrap();
@@ -120,6 +146,17 @@ impl Stack {
             let StackValue::Number(y) = self.stack.pop_back().unwrap();
             let StackValue::Number(x) = self.stack.pop_back().unwrap();
             Ok( (x, y) )
+        } else {
+            Err("stack empty!".to_owned())
+        }
+    }
+
+    fn arg3_f64(&mut self) -> Result<(f64, f64, f64), String> {
+        if self.stack.len() >= 3 {
+            let StackValue::Number(z) = self.stack.pop_back().unwrap();
+            let StackValue::Number(y) = self.stack.pop_back().unwrap();
+            let StackValue::Number(x) = self.stack.pop_back().unwrap();
+            Ok( (x, y, z) )
         } else {
             Err("stack empty!".to_owned())
         }

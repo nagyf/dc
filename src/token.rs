@@ -8,6 +8,7 @@ pub enum Op {
     DivRem,
     Exp,
     Sqrt,
+    ModExp,
     Clear,
     Duplicate,
     PrintPop,
@@ -35,13 +36,14 @@ pub fn tokenize(str: &str) -> Result<Vec<Op>, String> {
             'c' => tokens.push(Op::Clear),
             'd' => tokens.push(Op::Duplicate),
             '+' => tokens.push(Op::Add),
+            '-' => tokens.push(Op::Sub),
             '*' => tokens.push(Op::Mul),
             '/' => tokens.push(Op::Div),
             '%' => tokens.push(Op::Mod),
             '~' => tokens.push(Op::DivRem),
             '^' => tokens.push(Op::Exp),
             'v' => tokens.push(Op::Sqrt),
-            '-' => tokens.push(Op::Sub),
+            '|' => tokens.push(Op::ModExp),
             '_' | '0'..='9' => {
                 let mut num_str = String::new();
                 num_str.push(ch);
