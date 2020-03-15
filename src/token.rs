@@ -5,6 +5,7 @@ pub enum Op {
     Mul,
     Div,
     Mod,
+    DivRem,
     Exp,
     Clear,
     Duplicate,
@@ -36,6 +37,7 @@ pub fn tokenize(str: &str) -> Result<Vec<Op>, String> {
             '*' => tokens.push(Op::Mul),
             '/' => tokens.push(Op::Div),
             '%' => tokens.push(Op::Mod),
+            '~' => tokens.push(Op::DivRem),
             '^' => tokens.push(Op::Exp),
             '-' => tokens.push(Op::Sub),
             '_' | '0'..='9' => {

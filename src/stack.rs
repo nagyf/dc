@@ -1,6 +1,7 @@
 use std::collections::LinkedList;
 use std::fmt;
 use std::collections::linked_list::Iter;
+use std::ops::{Rem, Div};
 
 #[derive(Debug, Copy, Clone)]
 pub enum StackValue {
@@ -78,6 +79,19 @@ impl Stack {
         self.arg2_f64().map(|(x,y)| {
             self.push(StackValue::Number(x % y));
         })
+    }
+
+    pub fn div_rem(&mut self) -> Result<(), String> {
+        self.arg2_f64()
+            .and_then(|(x, y)| {
+                if y == 0f64 { Err("division by zero".to_owned()) } else { Ok((x, y)) }
+            })
+            .map(|(x,y)| {
+                let div = x.div(y).floor();
+                let rem = x % y;
+                self.push(StackValue::Number(rem));
+                self.push(StackValue::Number(div));
+            })
     }
 
     pub fn exp(&mut self) -> Result<(), String> {

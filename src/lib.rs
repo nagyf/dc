@@ -98,6 +98,12 @@ fn process_op(stack: &mut Stack, op: &Op) -> OpResult {
             });
             OpResult::Ok
         }
+        Op::DivRem => {
+            stack.div_rem().map_err(|error| {
+                println!("{}", error);
+            });
+            OpResult::Ok
+        }
         Op::Exp => {
             stack.exp().map_err(|error| {
                 println!("{}", error);
