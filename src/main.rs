@@ -1,23 +1,23 @@
-use dc::stack::Stack;
+use dc::calculator::Calculator;
 use dc::{process_input, OpResult};
 use clap::{App, Arg, ArgMatches};
 
 fn main() {
     let matches = parse_arguments();
-    let mut stack = Stack::new();
+    let mut calculator = Calculator::new();
 
     if let Some(value) = matches.value_of("expression") {
-        process_input(&mut stack, value).unwrap();
+        process_input(&mut calculator, value).unwrap();
     } else if let Some(value) = matches.value_of("file") {
         let content = std::fs::read_to_string(value).unwrap();
-        process_input(&mut stack, &content).unwrap();
+        process_input(&mut calculator, &content).unwrap();
     } else if let Some(files) = matches.values_of("FILE") {
         for file in files {
             let content = std::fs::read_to_string(file).unwrap();
-            process_input(&mut stack, &content).unwrap();
+            process_input(&mut calculator, &content).unwrap();
         }
     } else {
-        repl(&mut stack);
+        repl(&mut calculator);
     }
 }
 
@@ -47,7 +47,7 @@ fn parse_arguments() -> ArgMatches<'static> {
         .get_matches()
 }
 
-fn repl(mut stack: &mut Stack) {
+fn repl(mut calculator: &mut Calculator) {
     let stdin = std::io::stdin();
     let mut buffer = String::new();
 
@@ -55,7 +55,7 @@ fn repl(mut stack: &mut Stack) {
         buffer.clear();
         stdin.read_line(&mut buffer).unwrap();
 
-        match process_input(&mut stack, buffer.trim().as_ref()) {
+        match process_input(&mut calculator, buffer.trim().as_ref()) {
             Ok(result) => {
                 match result {
                     OpResult::Exit => break,

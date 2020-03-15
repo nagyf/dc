@@ -1,10 +1,10 @@
 extern crate clap;
 
-pub mod stack;
+pub mod calculator;
 mod token;
 
 use std::io::Write;
-use crate::stack::{Stack, StackValue};
+use crate::calculator::{Calculator, StackValue};
 use crate::token::{tokenize, Op};
 
 pub enum OpResult {
@@ -12,7 +12,7 @@ pub enum OpResult {
     Exit
 }
 
-pub fn process_input(stack: &mut Stack, str: &str) -> Result<OpResult, String> {
+pub fn process_input(stack: &mut Calculator, str: &str) -> Result<OpResult, String> {
     let tokens = str
         .split_whitespace()
         .map(tokenize)
@@ -31,34 +31,34 @@ pub fn process_input(stack: &mut Stack, str: &str) -> Result<OpResult, String> {
     Ok(OpResult::Ok)
 }
 
-fn process_op(stack: &mut Stack, op: &Op) -> Result<OpResult, String> {
+fn process_op(calculator: &mut Calculator, op: &Op) -> Result<OpResult, String> {
     match op {
         Op::GetInputRadix => {
-            stack.get_input_radix();
+            calculator.get_input_radix();
             Ok(OpResult::Ok)
         },
         Op::GetOutputRadix => {
-            stack.get_output_radix();
+            calculator.get_output_radix();
             Ok(OpResult::Ok)
         },
         Op::GetPrecision => {
-            stack.get_precision();
+            calculator.get_precision();
             Ok(OpResult::Ok)
         },
         Op::SetInputRadix => {
-            stack.set_input_radix().and(Ok(OpResult::Ok))
+            calculator.set_input_radix().and(Ok(OpResult::Ok))
         },
         Op::SetOutputRadix => {
-            stack.set_output_radix().and(Ok(OpResult::Ok))
+            calculator.set_output_radix().and(Ok(OpResult::Ok))
         },
         Op::SetPrecision => {
-            stack.set_precision().and(Ok(OpResult::Ok))
+            calculator.set_precision().and(Ok(OpResult::Ok))
         },
         Op::Exit => {
             Ok(OpResult::Exit)
         }
         Op::PrintPeek => {
-            stack.peek()
+            calculator.peek()
                 .map(|value| {
                     println!("{}", value);
                     OpResult::Ok
@@ -66,22 +66,22 @@ fn process_op(stack: &mut Stack, op: &Op) -> Result<OpResult, String> {
                 .ok_or("stack empty!".to_owned())
         }
         Op::Clear => {
-            stack.clear();
+            calculator.clear();
             Ok(OpResult::Ok)
         }
         Op::PrintAll => {
-            stack.iter().for_each(|value| println!("{}", value));
+            calculator.iter().for_each(|value| println!("{}", value));
             Ok(OpResult::Ok)
         }
         Op::PrintPop => {
-            stack.pop().map(|value| {
+            calculator.pop().map(|value| {
                 print!("{}", value);
                 std::io::stdout().flush().unwrap();
                 OpResult::Ok
             }).ok_or("stack empty!".to_owned())
         }
         Op::Duplicate => {
-            let value = stack.peek().and_then(|value| {
+            let value = calculator.peek().and_then(|value| {
                 match value {
                     StackValue::Number(num) => Some(num)
                 }
@@ -89,44 +89,44 @@ fn process_op(stack: &mut Stack, op: &Op) -> Result<OpResult, String> {
 
             if let Some(num) = value {
                 let stack_value = StackValue::Number(*num);
-                stack.push(stack_value);
+                calculator.push(stack_value);
             }
 
             Ok(OpResult::Ok)
         }
         Op::Reverse => {
-            stack.reverse();
+            calculator.reverse();
             Ok(OpResult::Ok)
         }
         Op::Add => {
-            stack.add().and(Ok(OpResult::Ok))
+            calculator.add().and(Ok(OpResult::Ok))
         }
         Op::Sub => {
-            stack.sub().and(Ok(OpResult::Ok))
+            calculator.sub().and(Ok(OpResult::Ok))
         }
         Op::Mul => {
-            stack.mul().and(Ok(OpResult::Ok))
+            calculator.mul().and(Ok(OpResult::Ok))
         }
         Op::Div => {
-            stack.div().and(Ok(OpResult::Ok))
+            calculator.div().and(Ok(OpResult::Ok))
         }
         Op::Mod => {
-            stack.modulo().and(Ok(OpResult::Ok))
+            calculator.modulo().and(Ok(OpResult::Ok))
         }
         Op::DivRem => {
-            stack.div_rem().and(Ok(OpResult::Ok))
+            calculator.div_rem().and(Ok(OpResult::Ok))
         }
         Op::Exp => {
-            stack.exp().and(Ok(OpResult::Ok))
+            calculator.exp().and(Ok(OpResult::Ok))
         }
         Op::Sqrt => {
-            stack.sqrt().and(Ok(OpResult::Ok))
+            calculator.sqrt().and(Ok(OpResult::Ok))
         }
         Op::ModExp => {
-            stack.mod_exp().and(Ok(OpResult::Ok))
+            calculator.mod_exp().and(Ok(OpResult::Ok))
         }
         Op::Push(num) => {
-            stack.push(StackValue::Number(*num));
+            calculator.push(StackValue::Number(*num));
             Ok(OpResult::Ok)
         }
     }
@@ -134,28 +134,28 @@ fn process_op(stack: &mut Stack, op: &Op) -> Result<OpResult, String> {
 
 #[cfg(test)]
 mod test {
-    use crate::stack::{Stack, StackValue};
+    use crate::calculator::{Calculator, StackValue};
     use crate::process_input;
 
     #[test]
     fn test_execution_basic() {
-        let mut stack = Stack::new();
+        let mut calculator = Calculator::new();
         // sqrt((((5 * 5 + 10) - 2) / 2) ^ 2)
-        process_input(&mut stack, "5d*5+10-2/2^v");
-        assert_eq!(*stack.peek().unwrap(), StackValue::Number(10.0));
+        process_input(&mut calculator, "5d*5+10-2/2^v");
+        assert_eq!(*calculator.peek().unwrap(), StackValue::Number(10.0));
     }
 
     #[test]
     fn test_execution_duplicate() {
-        let mut stack = Stack::new();
-        process_input(&mut stack, "5d*");
-        assert_eq!(*stack.peek().unwrap(), StackValue::Number(25.0));
+        let mut calculator = Calculator::new();
+        process_input(&mut calculator, "5d*");
+        assert_eq!(*calculator.peek().unwrap(), StackValue::Number(25.0));
     }
 
     #[test]
     fn test_execution_whitespaces() {
-        let mut stack = Stack::new();
-        process_input(&mut stack, "10 5 2 * /");
-        assert_eq!(*stack.peek().unwrap(), StackValue::Number(1.0));
+        let mut calculator = Calculator::new();
+        process_input(&mut calculator, "10 5 2 * /");
+        assert_eq!(*calculator.peek().unwrap(), StackValue::Number(1.0));
     }
 }

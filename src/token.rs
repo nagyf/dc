@@ -92,7 +92,6 @@ pub fn tokenize(str: &str) -> Result<Vec<Op>, String> {
 #[cfg(test)]
 mod test {
     use crate::token::*;
-    use crate::stack::StackValue;
 
     #[test]
     fn tokenize_operation() {
