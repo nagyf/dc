@@ -36,6 +36,7 @@ pub fn tokenize(str: &str) -> Result<Vec<Op>, String> {
             '*' => tokens.push(Op::Mul),
             '/' => tokens.push(Op::Div),
             '%' => tokens.push(Op::Mod),
+            '^' => tokens.push(Op::Exp),
             '0' | '1' | '2' | '3' | '4' | '5' | '6' | '7' | '8' | '9' => {
                 let mut num_str = String::new();
                 num_str.push(ch);
