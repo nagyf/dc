@@ -123,3 +123,24 @@ fn process_op(stack: &mut Stack, op: &Op) -> Result<OpResult, String> {
         }
     }
 }
+
+#[cfg(test)]
+mod test {
+    use crate::stack::{Stack, StackValue};
+    use crate::process_input;
+
+    #[test]
+    fn test_execution_basic() {
+        let mut stack = Stack::new();
+        // sqrt((((5 * 5 + 10) - 2) / 2) ^ 2)
+        process_input(&mut stack, "5d*5+10-2/2^v");
+        assert_eq!(*stack.peek().unwrap(), StackValue::Number(10.0));
+    }
+
+    #[test]
+    fn test_execution_duplicate() {
+        let mut stack = Stack::new();
+        process_input(&mut stack, "5d*");
+        assert_eq!(*stack.peek().unwrap(), StackValue::Number(25.0));
+    }
+}

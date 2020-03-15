@@ -3,7 +3,7 @@ use std::fmt;
 use std::collections::linked_list::Iter;
 use std::ops::Div;
 
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Copy, Clone, PartialEq)]
 pub enum StackValue {
     Number(f64)
 }
@@ -206,5 +206,266 @@ impl Stack {
         } else {
             Err("stack empty!".to_owned())
         }
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use crate::stack::*;
+
+    #[test]
+    fn test_new() {
+        let stack = Stack::new();
+        assert_eq!(stack.stack.len(), 0);
+        assert_eq!(stack.precision, 0);
+        assert_eq!(stack.input_radix, 10);
+        assert_eq!(stack.output_radix, 10);
+    }
+
+    #[test]
+    fn test_push() {
+        let mut stack = Stack::new();
+        assert_eq!(stack.stack.len(), 0);
+        stack.push(StackValue::Number(42.0));
+        assert_eq!(stack.stack.len(), 1);
+        assert_eq!(*stack.stack.back().unwrap(), StackValue::Number(42.0));
+    }
+
+    #[test]
+    fn test_pop() {
+        let mut stack = Stack::new();
+        stack.stack.push_back(StackValue::Number(42.0));
+        assert_eq!(stack.stack.len(), 1);
+        assert_eq!(stack.pop(), Some(StackValue::Number(42.0)));
+        assert_eq!(stack.stack.len(), 0);
+    }
+
+    #[test]
+    fn test_pop_empty() {
+        let mut stack = Stack::new();
+        assert_eq!(stack.stack.len(), 0);
+        assert_eq!(stack.pop(), None);
+        assert_eq!(stack.stack.len(), 0);
+    }
+
+    #[test]
+    fn test_peek() {
+        let mut stack = Stack::new();
+        stack.stack.push_back(StackValue::Number(42.0));
+        assert_eq!(stack.stack.len(), 1);
+        assert_eq!(stack.peek(), Some(&StackValue::Number(42.0)));
+        assert_eq!(stack.stack.len(), 1);
+    }
+
+    #[test]
+    fn test_peek_empty() {
+        let mut stack = Stack::new();
+        assert_eq!(stack.stack.len(), 0);
+        assert_eq!(stack.peek(), None);
+        assert_eq!(stack.stack.len(), 0);
+    }
+
+    #[test]
+    fn test_iter() {
+        let mut stack = Stack::new();
+        stack.stack.push_back(StackValue::Number(1.0));
+        stack.stack.push_back(StackValue::Number(2.0));
+        stack.stack.push_back(StackValue::Number(3.0));
+
+        let mut result = Vec::new();
+        for StackValue::Number(i) in stack.iter() {
+            result.push(*i);
+        }
+
+        assert_eq!(result, vec![1.0, 2.0, 3.0]);
+    }
+
+    #[test]
+    fn test_clear() {
+        let mut stack = Stack::new();
+        stack.stack.push_back(StackValue::Number(1.0));
+        stack.stack.push_back(StackValue::Number(2.0));
+        stack.stack.push_back(StackValue::Number(3.0));
+        assert_eq!(stack.stack.len(), 3);
+        stack.clear();
+        assert_eq!(stack.stack.len(), 0);
+    }
+
+    #[test]
+    fn test_clear_empty() {
+        let mut stack = Stack::new();
+        assert_eq!(stack.stack.len(), 0);
+        stack.clear();
+        assert_eq!(stack.stack.len(), 0);
+    }
+
+    #[test]
+    fn test_reverse() {
+        let mut stack = Stack::new();
+        stack.stack.push_back(StackValue::Number(4.0));
+        stack.stack.push_back(StackValue::Number(5.0));
+        stack.reverse();
+        assert_eq!(stack.stack.len(), 2);
+        assert_eq!(*stack.stack.front().unwrap(), StackValue::Number(5.0));
+        assert_eq!(*stack.stack.back().unwrap(), StackValue::Number(4.0));
+    }
+
+    #[test]
+    fn test_reverse_singleton() {
+        let mut stack = Stack::new();
+        stack.stack.push_back(StackValue::Number(4.0));
+        stack.reverse();
+        assert_eq!(stack.stack.len(), 1);
+        assert_eq!(*stack.stack.back().unwrap(), StackValue::Number(4.0));
+    }
+
+    #[test]
+    fn test_add() {
+        let mut stack = Stack::new();
+        stack.stack.push_back(StackValue::Number(4.0));
+        stack.stack.push_back(StackValue::Number(5.0));
+        stack.add();
+        assert_eq!(stack.stack.len(), 1);
+        assert_eq!(*stack.stack.back().unwrap(), StackValue::Number(9.0));
+    }
+
+    #[test]
+    fn test_sub() {
+        let mut stack = Stack::new();
+        stack.stack.push_back(StackValue::Number(4.0));
+        stack.stack.push_back(StackValue::Number(5.0));
+        stack.sub();
+        assert_eq!(stack.stack.len(), 1);
+        assert_eq!(*stack.stack.back().unwrap(), StackValue::Number(-1.0));
+    }
+
+    #[test]
+    fn test_mul() {
+        let mut stack = Stack::new();
+        stack.stack.push_back(StackValue::Number(4.0));
+        stack.stack.push_back(StackValue::Number(5.0));
+        stack.mul();
+        assert_eq!(stack.stack.len(), 1);
+        assert_eq!(*stack.stack.back().unwrap(), StackValue::Number(20.0));
+    }
+
+    #[test]
+    fn test_div() {
+        let mut stack = Stack::new();
+        stack.stack.push_back(StackValue::Number(20.0));
+        stack.stack.push_back(StackValue::Number(5.0));
+        stack.div();
+        assert_eq!(stack.stack.len(), 1);
+        assert_eq!(*stack.stack.back().unwrap(), StackValue::Number(4.0));
+    }
+
+    #[test]
+    fn test_modulo() {
+        let mut stack = Stack::new();
+        stack.stack.push_back(StackValue::Number(10.0));
+        stack.stack.push_back(StackValue::Number(6.0));
+        stack.modulo();
+        assert_eq!(stack.stack.len(), 1);
+        assert_eq!(*stack.stack.back().unwrap(), StackValue::Number(4.0));
+    }
+
+    #[test]
+    fn test_div_rem() {
+        let mut stack = Stack::new();
+        stack.stack.push_back(StackValue::Number(10.0));
+        stack.stack.push_back(StackValue::Number(6.0));
+        stack.div_rem();
+        assert_eq!(stack.stack.len(), 2);
+        assert_eq!(*stack.stack.front().unwrap(), StackValue::Number(4.0));
+        assert_eq!(*stack.stack.back().unwrap(), StackValue::Number(1.0));
+    }
+
+    #[test]
+    fn test_exp() {
+        let mut stack = Stack::new();
+        stack.stack.push_back(StackValue::Number(2.0));
+        stack.stack.push_back(StackValue::Number(10.0));
+        stack.exp();
+        assert_eq!(stack.stack.len(), 1);
+        assert_eq!(*stack.stack.back().unwrap(), StackValue::Number(1024.0));
+    }
+
+    #[test]
+    fn test_sqrt() {
+        let mut stack = Stack::new();
+        stack.stack.push_back(StackValue::Number(10_000.0));
+        stack.sqrt();
+        assert_eq!(stack.stack.len(), 1);
+        assert_eq!(*stack.stack.back().unwrap(), StackValue::Number(100.0));
+    }
+
+    #[test]
+    fn test_mod_exp() {
+        // https://en.wikipedia.org/wiki/Modular_exponentiation
+
+        let mut stack = Stack::new();
+        stack.stack.push_back(StackValue::Number(4.0));
+        stack.stack.push_back(StackValue::Number(13.0));
+        stack.stack.push_back(StackValue::Number(497.0));
+        stack.mod_exp();
+        assert_eq!(stack.stack.len(), 1);
+        assert_eq!(*stack.stack.back().unwrap(), StackValue::Number(445.0));
+    }
+
+    #[test]
+    fn test_get_input_radix() {
+        let mut stack = Stack::new();
+        stack.get_input_radix();
+        assert_eq!(stack.stack.len(), 1);
+        assert_eq!(*stack.stack.back().unwrap(), StackValue::Number(stack.input_radix as f64));
+    }
+
+    #[test]
+    fn test_get_output_radix() {
+        let mut stack = Stack::new();
+        stack.get_output_radix();
+        assert_eq!(stack.stack.len(), 1);
+        assert_eq!(*stack.stack.back().unwrap(), StackValue::Number(stack.output_radix as f64));
+    }
+
+    #[test]
+    fn test_get_precision() {
+        let mut stack = Stack::new();
+        stack.get_precision();
+        assert_eq!(stack.stack.len(), 1);
+        assert_eq!(*stack.stack.back().unwrap(), StackValue::Number(stack.precision as f64));
+    }
+
+    #[test]
+    fn test_set_input_radix() {
+        let mut stack = Stack::new();
+        stack.push(StackValue::Number(42f64));
+        stack.set_input_radix();
+        assert_eq!(stack.stack.len(), 0);
+        assert_eq!(stack.input_radix, 42);
+        assert_eq!(stack.output_radix, 10);
+        assert_eq!(stack.precision, 0);
+    }
+
+    #[test]
+    fn test_set_output_radix() {
+        let mut stack = Stack::new();
+        stack.push(StackValue::Number(42f64));
+        stack.set_output_radix();
+        assert_eq!(stack.stack.len(), 0);
+        assert_eq!(stack.input_radix, 10);
+        assert_eq!(stack.output_radix, 42);
+        assert_eq!(stack.precision, 0);
+    }
+
+    #[test]
+    fn test_set_precision() {
+        let mut stack = Stack::new();
+        stack.push(StackValue::Number(42f64));
+        stack.set_precision();
+        assert_eq!(stack.stack.len(), 0);
+        assert_eq!(stack.input_radix, 10);
+        assert_eq!(stack.output_radix, 10);
+        assert_eq!(stack.precision, 42);
     }
 }
