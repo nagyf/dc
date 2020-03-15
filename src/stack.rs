@@ -17,14 +17,50 @@ impl fmt::Display for StackValue {
 }
 
 pub struct Stack {
-    stack: LinkedList<StackValue>
+    stack: LinkedList<StackValue>,
+    input_radix: u8,
+    output_radix: u8,
+    precision: u8
 }
 
 impl Stack {
     pub fn new() -> Stack {
         Stack {
-            stack: LinkedList::new()
+            stack: LinkedList::new(),
+            input_radix: 10,
+            output_radix: 10,
+            precision: 0
         }
+    }
+
+    pub fn get_input_radix(&mut self) {
+        self.stack.push_back(StackValue::Number(self.input_radix as f64));
+    }
+
+    pub fn get_output_radix(&mut self) {
+        self.stack.push_back(StackValue::Number(self.output_radix as f64));
+    }
+
+    pub fn get_precision(&mut self) {
+        self.stack.push_back(StackValue::Number(self.precision as f64));
+    }
+
+    pub fn set_input_radix(&mut self) -> Result<(), String> {
+        self.arg1_f64().map(|value| {
+            self.input_radix = value as u8;
+        })
+    }
+
+    pub fn set_output_radix(&mut self) -> Result<(), String> {
+        self.arg1_f64().map(|value| {
+            self.output_radix = value as u8;
+        })
+    }
+
+    pub fn set_precision(&mut self) -> Result<(), String> {
+        self.arg1_f64().map(|value| {
+            self.precision = value as u8;
+        })
     }
 
     pub fn iter(&self) -> Iter<StackValue> {

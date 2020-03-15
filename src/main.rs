@@ -9,7 +9,7 @@ fn main() {
         buffer.clear();
         stdin.read_line(&mut buffer).unwrap();
 
-        match process_input(&mut stack, buffer.trim().to_lowercase().as_ref()) {
+        match process_input(&mut stack, buffer.trim().as_ref()) {
             Ok(result) => {
                 match result {
                     OpResult::Exit => break,

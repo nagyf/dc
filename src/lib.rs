@@ -25,6 +25,27 @@ pub fn process_input(stack: &mut Stack, str: &str) -> Result<OpResult, String> {
 
 fn process_op(stack: &mut Stack, op: &Op) -> Result<OpResult, String> {
     match op {
+        Op::GetInputRadix => {
+            stack.get_input_radix();
+            Ok(OpResult::Ok)
+        },
+        Op::GetOutputRadix => {
+            stack.get_output_radix();
+            Ok(OpResult::Ok)
+        },
+        Op::GetPrecision => {
+            stack.get_precision();
+            Ok(OpResult::Ok)
+        },
+        Op::SetInputRadix => {
+            stack.set_input_radix().and(Ok(OpResult::Ok))
+        },
+        Op::SetOutputRadix => {
+            stack.set_output_radix().and(Ok(OpResult::Ok))
+        },
+        Op::SetPrecision => {
+            stack.set_precision().and(Ok(OpResult::Ok))
+        },
         Op::Exit => {
             Ok(OpResult::Exit)
         }

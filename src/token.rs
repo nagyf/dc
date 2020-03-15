@@ -9,14 +9,22 @@ pub enum Op {
     Exp,
     Sqrt,
     ModExp,
-    Clear,
-    Duplicate,
-    Reverse,
     PrintPop,
     PrintPeek,
     PrintAll,
     Push(f64),
-    Exit
+    Exit,
+
+    // Stack operations
+    Clear,
+    Duplicate,
+    Reverse,
+    SetInputRadix,
+    SetOutputRadix,
+    SetPrecision,
+    GetInputRadix,
+    GetOutputRadix,
+    GetPrecision,
 }
 
 pub fn tokenize(str: &str) -> Result<Vec<Op>, String> {
@@ -30,13 +38,23 @@ pub fn tokenize(str: &str) -> Result<Vec<Op>, String> {
         index += 1;
 
         match ch {
+            // Stack operations
+            'c' => tokens.push(Op::Clear),
+            'd' => tokens.push(Op::Duplicate),
+            'r' => tokens.push(Op::Reverse),
+
+            'i' => tokens.push(Op::SetInputRadix),
+            'o' => tokens.push(Op::SetOutputRadix),
+            'k' => tokens.push(Op::SetPrecision),
+            'I' => tokens.push(Op::GetInputRadix),
+            'O' => tokens.push(Op::GetOutputRadix),
+            'K' => tokens.push(Op::GetPrecision),
+
+            // Calculator operations
             'q' => tokens.push(Op::Exit),
             'p' => tokens.push(Op::PrintPeek),
             'n' => tokens.push(Op::PrintPop),
             'f' => tokens.push(Op::PrintAll),
-            'c' => tokens.push(Op::Clear),
-            'd' => tokens.push(Op::Duplicate),
-            'r' => tokens.push(Op::Reverse),
             '+' => tokens.push(Op::Add),
             '-' => tokens.push(Op::Sub),
             '*' => tokens.push(Op::Mul),
