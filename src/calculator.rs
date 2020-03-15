@@ -170,7 +170,7 @@ impl Calculator {
                     self.push(StackValue::Number(0f64));
                 } else {
                     let mut c = 1;
-                    for _e_prime in 0..=(exponent-1) {
+                    for _ in 0..exponent {
                         c = (c * base) % modulus;
                     }
                     self.push(StackValue::Number(c as f64));
