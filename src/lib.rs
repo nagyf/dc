@@ -1,3 +1,5 @@
+extern crate clap;
+
 pub mod stack;
 mod token;
 

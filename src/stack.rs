@@ -259,7 +259,7 @@ mod test {
 
     #[test]
     fn test_peek_empty() {
-        let mut stack = Stack::new();
+        let stack = Stack::new();
         assert_eq!(stack.stack.len(), 0);
         assert_eq!(stack.peek(), None);
         assert_eq!(stack.stack.len(), 0);

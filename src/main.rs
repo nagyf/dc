@@ -1,10 +1,56 @@
 use dc::stack::Stack;
 use dc::{process_input, OpResult};
+use clap::{App, Arg, ArgMatches};
 
 fn main() {
+    let matches = parse_arguments();
     let mut stack = Stack::new();
-    let mut buffer = String::new();
+
+    if let Some(value) = matches.value_of("expression") {
+        process_input(&mut stack, value).unwrap();
+    } else if let Some(value) = matches.value_of("file") {
+        let content = std::fs::read_to_string(value).unwrap();
+        process_input(&mut stack, &content).unwrap();
+    } else if let Some(files) = matches.values_of("FILE") {
+        for file in files {
+            let content = std::fs::read_to_string(file).unwrap();
+            process_input(&mut stack, &content).unwrap();
+        }
+    } else {
+        repl(&mut stack);
+    }
+}
+
+fn parse_arguments() -> ArgMatches<'static> {
+    App::new("dc")
+        .version("0.1")
+        .author("Ferenc Nagy <nagy.ferenc.jr@protonmail.com>")
+        .about("Clone of the Unix program called dc")
+        .arg(Arg::with_name("expression")
+            .short("e")
+            .long("expression")
+            .value_name("scriptexpression")
+            .help("Add the commands in script to the set of commands to be run while processing the input.")
+            .required(false)
+            .takes_value(true))
+        .arg(Arg::with_name("file")
+            .short("f")
+            .long("file")
+            .value_name("script-file")
+            .help("Add the commands contained in the file script-file to the set of commands to be run while processing the input.")
+            .required(false)
+            .takes_value(true))
+        .arg(Arg::with_name("FILE")
+            .help("any files to process one-by-one")
+            .multiple(true)
+            .required(false))
+        .get_matches()
+}
+
+fn repl(mut stack: &mut Stack) {
     let stdin = std::io::stdin();
+    let mut buffer = String::new();
+
     loop {
         buffer.clear();
         stdin.read_line(&mut buffer).unwrap();
