@@ -65,6 +65,10 @@ fn process_op(stack: &mut Stack, op: &Op) -> Result<OpResult, String> {
 
             Ok(OpResult::Ok)
         }
+        Op::Reverse => {
+            stack.reverse();
+            Ok(OpResult::Ok)
+        }
         Op::Add => {
             stack.add().and(Ok(OpResult::Ok))
         }

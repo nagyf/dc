@@ -47,6 +47,16 @@ impl Stack {
         self.stack.clear();
     }
 
+    pub fn reverse(&mut self) {
+        if self.stack.len() >= 2 {
+            let first = self.stack.pop_back().unwrap();
+            let second = self.stack.pop_back().unwrap();
+
+            self.stack.push_back(first);
+            self.stack.push_back(second);
+        }
+    }
+
     pub fn add(&mut self) -> Result<(), String> {
         self.arg2_f64().map(|(x,y)| {
             self.push(StackValue::Number(x + y));
