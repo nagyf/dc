@@ -11,7 +11,13 @@ pub enum OpResult {
 }
 
 pub fn process_input(stack: &mut Stack, str: &str) -> Result<OpResult, String> {
-    let tokens = tokenize(str)?;
+    let tokens = str
+        .split_whitespace()
+        .map(tokenize)
+        .flatten()
+        .collect::<Vec<Vec<Op>>>()
+        .concat();
+
     for op in tokens {
         match process_op(stack, &op) {
             Ok(OpResult::Exit) => return Ok(OpResult::Exit),
@@ -142,5 +148,12 @@ mod test {
         let mut stack = Stack::new();
         process_input(&mut stack, "5d*");
         assert_eq!(*stack.peek().unwrap(), StackValue::Number(25.0));
+    }
+
+    #[test]
+    fn test_execution_whitespaces() {
+        let mut stack = Stack::new();
+        process_input(&mut stack, "10 5 2 * /");
+        assert_eq!(*stack.peek().unwrap(), StackValue::Number(1.0));
     }
 }
