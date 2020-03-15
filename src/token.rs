@@ -1,4 +1,4 @@
-#[derive(Debug, Eq, PartialEq, Copy, Clone)]
+#[derive(Debug, PartialEq, Copy, Clone)]
 pub enum Op {
     Add,
     Sub,
@@ -11,7 +11,7 @@ pub enum Op {
     PrintPop,
     PrintPeek,
     PrintAll,
-    Push(i64),
+    Push(f64),
     Exit
 }
 
@@ -49,7 +49,7 @@ pub fn tokenize(str: &str) -> Result<Vec<Op>, String> {
                         _ => break,
                     };
                 }
-                tokens.push(Op::Push(num_str.parse::<i64>().unwrap()))
+                tokens.push(Op::Push(num_str.parse::<f64>().unwrap()))
             },
             _ => {
                 return Err(format!("Unknown operation: {}", ch))

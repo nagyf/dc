@@ -4,7 +4,7 @@ use std::collections::linked_list::Iter;
 
 #[derive(Debug, Copy, Clone)]
 pub enum StackValue {
-    Number(i64)
+    Number(f64)
 }
 
 impl fmt::Display for StackValue {
@@ -47,27 +47,27 @@ impl Stack {
     }
 
     pub fn add(&mut self) -> Result<(), String> {
-        self.arg2_i64().map(|(x,y)| {
+        self.arg2_f64().map(|(x,y)| {
             self.push(StackValue::Number(x + y));
         })
     }
 
     pub fn sub(&mut self) -> Result<(), String> {
-        self.arg2_i64().map(|(x,y)| {
+        self.arg2_f64().map(|(x,y)| {
             self.push(StackValue::Number(x - y));
         })
     }
 
     pub fn mul(&mut self) -> Result<(), String> {
-        self.arg2_i64().map(|(x,y)| {
+        self.arg2_f64().map(|(x,y)| {
             self.push(StackValue::Number(x * y));
         })
     }
 
     pub fn div(&mut self) -> Result<(), String> {
-        self.arg2_i64()
+        self.arg2_f64()
             .and_then(|(x, y)| {
-                if y == 0 { Err("division by zero".to_owned()) } else { Ok((x, y)) }
+                if y == 0f64 { Err("division by zero".to_owned()) } else { Ok((x, y)) }
             })
             .map(|(x,y)| {
                 self.push(StackValue::Number(x / y));
@@ -75,18 +75,18 @@ impl Stack {
     }
 
     pub fn modulo(&mut self) -> Result<(), String> {
-        self.arg2_i64().map(|(x,y)| {
+        self.arg2_f64().map(|(x,y)| {
             self.push(StackValue::Number(x % y));
         })
     }
 
     pub fn exp(&mut self) -> Result<(), String> {
-        self.arg2_i64().map(|(x,y)| {
-            self.push(StackValue::Number(x.pow(y as u32)));
+        self.arg2_f64().map(|(x,y)| {
+            self.push(StackValue::Number(x.powf(y)));
         })
     }
 
-    fn arg2_i64(&mut self) -> Result<(i64, i64), String> {
+    fn arg2_f64(&mut self) -> Result<(f64, f64), String> {
         if self.stack.len() >= 2 {
             let StackValue::Number(y) = self.stack.pop_back().unwrap();
             let StackValue::Number(x) = self.stack.pop_back().unwrap();
