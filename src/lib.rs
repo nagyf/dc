@@ -57,13 +57,13 @@ fn process_op(stack: &mut Stack, op: &Op) -> OpResult {
         Op::Duplicate => {
             let value = stack.peek().and_then(|value| {
                 match value {
-                    StackValue::Integer(num) => Some(num),
+                    StackValue::Number(num) => Some(num),
                     _ => None
                 }
             });
 
             if let Some(num) = value {
-                stack.push(StackValue::Integer(*num));
+                stack.push(StackValue::Number(*num));
             }
 
             OpResult::Ok
@@ -105,7 +105,7 @@ fn process_op(stack: &mut Stack, op: &Op) -> OpResult {
             OpResult::Ok
         }
         Op::Push(num) => {
-            stack.push(StackValue::Integer(*num));
+            stack.push(StackValue::Number(*num));
             OpResult::Ok
         }
     }

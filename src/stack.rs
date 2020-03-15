@@ -4,13 +4,13 @@ use std::collections::linked_list::Iter;
 
 #[derive(Debug, Copy, Clone)]
 pub enum StackValue {
-    Integer(i64)
+    Number(i64)
 }
 
 impl fmt::Display for StackValue {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            StackValue::Integer(x) => write!(f, "{}", x)
+            StackValue::Number(x) => write!(f, "{}", x)
         }
     }
 }
@@ -48,19 +48,19 @@ impl Stack {
 
     pub fn add(&mut self) -> Result<(), String> {
         self.arg2_i64().map(|(x,y)| {
-            self.push(StackValue::Integer(x + y));
+            self.push(StackValue::Number(x + y));
         })
     }
 
     pub fn sub(&mut self) -> Result<(), String> {
         self.arg2_i64().map(|(x,y)| {
-            self.push(StackValue::Integer(x - y));
+            self.push(StackValue::Number(x - y));
         })
     }
 
     pub fn mul(&mut self) -> Result<(), String> {
         self.arg2_i64().map(|(x,y)| {
-            self.push(StackValue::Integer(x * y));
+            self.push(StackValue::Number(x * y));
         })
     }
 
@@ -70,26 +70,26 @@ impl Stack {
                 if y == 0 { Err("division by zero".to_owned()) } else { Ok((x, y)) }
             })
             .map(|(x,y)| {
-                self.push(StackValue::Integer(x / y));
+                self.push(StackValue::Number(x / y));
             })
     }
 
     pub fn modulo(&mut self) -> Result<(), String> {
         self.arg2_i64().map(|(x,y)| {
-            self.push(StackValue::Integer(x % y));
+            self.push(StackValue::Number(x % y));
         })
     }
 
     pub fn exp(&mut self) -> Result<(), String> {
         self.arg2_i64().map(|(x,y)| {
-            self.push(StackValue::Integer(x.pow(y as u32)));
+            self.push(StackValue::Number(x.pow(y as u32)));
         })
     }
 
     fn arg2_i64(&mut self) -> Result<(i64, i64), String> {
         if self.stack.len() >= 2 {
-            let StackValue::Integer(y) = self.stack.pop_back().unwrap();
-            let StackValue::Integer(x) = self.stack.pop_back().unwrap();
+            let StackValue::Number(y) = self.stack.pop_back().unwrap();
+            let StackValue::Number(x) = self.stack.pop_back().unwrap();
             Ok( (x, y) )
         } else {
             Err("stack empty!".to_owned())
