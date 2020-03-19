@@ -138,24 +138,39 @@ mod test {
     use crate::process_input;
 
     #[test]
+    fn test_execution_empty() {
+        let mut calculator = Calculator::new();
+        process_input(&mut calculator, "").unwrap();
+        assert_eq!(calculator.peek(), None);
+    }
+
+    #[test]
+    fn test_execution_only_whitespaces() {
+        let mut calculator = Calculator::new();
+        process_input(&mut calculator, "     \n   \t\r\n  ").unwrap();
+        assert_eq!(calculator.peek(), None);
+    }
+
+    #[test]
     fn test_execution_basic() {
         let mut calculator = Calculator::new();
         // sqrt((((5 * 5 + 10) - 2) / 2) ^ 2)
-        process_input(&mut calculator, "5d*5+10-2/2^v");
+        process_input(&mut calculator, "5d*5+10-2/2^v").unwrap();
+        assert_eq!(*calculator.peek().unwrap(), StackValue::Number(10.0));
+    }
+
+    #[test]
+    fn test_execution_basic_whitespaces() {
+        let mut calculator = Calculator::new();
+        // sqrt((((5 * 5 + 10) - 2) / 2) ^ 2)
+        process_input(&mut calculator, "   5 d * 5 + 10 - 2 / 2 ^ v     ").unwrap();
         assert_eq!(*calculator.peek().unwrap(), StackValue::Number(10.0));
     }
 
     #[test]
     fn test_execution_duplicate() {
         let mut calculator = Calculator::new();
-        process_input(&mut calculator, "5d*");
+        process_input(&mut calculator, "5d*").unwrap();
         assert_eq!(*calculator.peek().unwrap(), StackValue::Number(25.0));
-    }
-
-    #[test]
-    fn test_execution_whitespaces() {
-        let mut calculator = Calculator::new();
-        process_input(&mut calculator, "10 5 2 * /");
-        assert_eq!(*calculator.peek().unwrap(), StackValue::Number(1.0));
     }
 }

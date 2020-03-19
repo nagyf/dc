@@ -324,7 +324,7 @@ mod test {
         let mut calculator = Calculator::new();
         calculator.stack.push_back(StackValue::Number(4.0));
         calculator.stack.push_back(StackValue::Number(5.0));
-        calculator.add();
+        calculator.add().unwrap();
         assert_eq!(calculator.stack.len(), 1);
         assert_eq!(*calculator.stack.back().unwrap(), StackValue::Number(9.0));
     }
@@ -334,7 +334,7 @@ mod test {
         let mut calculator = Calculator::new();
         calculator.stack.push_back(StackValue::Number(4.0));
         calculator.stack.push_back(StackValue::Number(5.0));
-        calculator.sub();
+        calculator.sub().unwrap();
         assert_eq!(calculator.stack.len(), 1);
         assert_eq!(*calculator.stack.back().unwrap(), StackValue::Number(-1.0));
     }
@@ -344,7 +344,7 @@ mod test {
         let mut calculator = Calculator::new();
         calculator.stack.push_back(StackValue::Number(4.0));
         calculator.stack.push_back(StackValue::Number(5.0));
-        calculator.mul();
+        calculator.mul().unwrap();
         assert_eq!(calculator.stack.len(), 1);
         assert_eq!(*calculator.stack.back().unwrap(), StackValue::Number(20.0));
     }
@@ -354,7 +354,7 @@ mod test {
         let mut calculator = Calculator::new();
         calculator.stack.push_back(StackValue::Number(20.0));
         calculator.stack.push_back(StackValue::Number(5.0));
-        calculator.div();
+        calculator.div().unwrap();
         assert_eq!(calculator.stack.len(), 1);
         assert_eq!(*calculator.stack.back().unwrap(), StackValue::Number(4.0));
     }
@@ -364,7 +364,7 @@ mod test {
         let mut calculator = Calculator::new();
         calculator.stack.push_back(StackValue::Number(10.0));
         calculator.stack.push_back(StackValue::Number(6.0));
-        calculator.modulo();
+        calculator.modulo().unwrap();
         assert_eq!(calculator.stack.len(), 1);
         assert_eq!(*calculator.stack.back().unwrap(), StackValue::Number(4.0));
     }
@@ -374,7 +374,7 @@ mod test {
         let mut calculator = Calculator::new();
         calculator.stack.push_back(StackValue::Number(10.0));
         calculator.stack.push_back(StackValue::Number(6.0));
-        calculator.div_rem();
+        calculator.div_rem().unwrap();
         assert_eq!(calculator.stack.len(), 2);
         assert_eq!(*calculator.stack.front().unwrap(), StackValue::Number(4.0));
         assert_eq!(*calculator.stack.back().unwrap(), StackValue::Number(1.0));
@@ -385,7 +385,7 @@ mod test {
         let mut calculator = Calculator::new();
         calculator.stack.push_back(StackValue::Number(2.0));
         calculator.stack.push_back(StackValue::Number(10.0));
-        calculator.exp();
+        calculator.exp().unwrap();
         assert_eq!(calculator.stack.len(), 1);
         assert_eq!(*calculator.stack.back().unwrap(), StackValue::Number(1024.0));
     }
@@ -394,7 +394,7 @@ mod test {
     fn test_sqrt() {
         let mut calculator = Calculator::new();
         calculator.stack.push_back(StackValue::Number(10_000.0));
-        calculator.sqrt();
+        calculator.sqrt().unwrap();
         assert_eq!(calculator.stack.len(), 1);
         assert_eq!(*calculator.stack.back().unwrap(), StackValue::Number(100.0));
     }
@@ -407,7 +407,7 @@ mod test {
         calculator.stack.push_back(StackValue::Number(4.0));
         calculator.stack.push_back(StackValue::Number(13.0));
         calculator.stack.push_back(StackValue::Number(497.0));
-        calculator.mod_exp();
+        calculator.mod_exp().unwrap();
         assert_eq!(calculator.stack.len(), 1);
         assert_eq!(*calculator.stack.back().unwrap(), StackValue::Number(445.0));
     }
@@ -440,7 +440,7 @@ mod test {
     fn test_set_input_radix() {
         let mut calculator = Calculator::new();
         calculator.push(StackValue::Number(42f64));
-        calculator.set_input_radix();
+        calculator.set_input_radix().unwrap();
         assert_eq!(calculator.stack.len(), 0);
         assert_eq!(calculator.input_radix, 42);
         assert_eq!(calculator.output_radix, 10);
@@ -451,7 +451,7 @@ mod test {
     fn test_set_output_radix() {
         let mut calculator = Calculator::new();
         calculator.push(StackValue::Number(42f64));
-        calculator.set_output_radix();
+        calculator.set_output_radix().unwrap();
         assert_eq!(calculator.stack.len(), 0);
         assert_eq!(calculator.input_radix, 10);
         assert_eq!(calculator.output_radix, 42);
@@ -462,7 +462,7 @@ mod test {
     fn test_set_precision() {
         let mut calculator = Calculator::new();
         calculator.push(StackValue::Number(42f64));
-        calculator.set_precision();
+        calculator.set_precision().unwrap();
         assert_eq!(calculator.stack.len(), 0);
         assert_eq!(calculator.input_radix, 10);
         assert_eq!(calculator.output_radix, 10);
