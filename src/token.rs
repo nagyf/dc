@@ -1,4 +1,6 @@
-#[derive(Debug, PartialEq, Copy, Clone)]
+use num_bigint::BigInt;
+
+#[derive(Debug, PartialEq, Clone)]
 pub enum Op {
     Add,
     Sub,
@@ -12,7 +14,7 @@ pub enum Op {
     PrintPop,
     PrintPeek,
     PrintAll,
-    Push(f64),
+    Push(BigInt),
     Exit,
 
     // Stack operations
@@ -77,8 +79,13 @@ pub fn tokenize(str: &str) -> Result<Vec<Op>, String> {
                     };
                 }
                 num_str = num_str.replace("_", "-");
-                let num = num_str.parse::<f64>().unwrap();
-                tokens.push(Op::Push(num));
+
+                // TODO radix
+                if let Some(num) = BigInt::parse_bytes(num_str.as_bytes(), 10) {
+                    tokens.push(Op::Push(num));
+                } else {
+                    Err(format!("Unable to parse number: {} with radix: {}", ch, 10))?;
+                }
             },
             _ => {
                 return Err(format!("Unknown operation: {}", ch))
@@ -123,32 +130,33 @@ mod test {
 
     #[test]
     fn tokenize_zero() {
-        assert_eq!(tokenize("0").unwrap(), vec![Op::Push(0.0)]);
+        assert_eq!(tokenize("0").unwrap(), vec![Op::Push(BigInt::from(0))]);
     }
 
     #[test]
     fn tokenize_number() {
-        assert_eq!(tokenize("42").unwrap(), vec![Op::Push(42.0)]);
+        assert_eq!(tokenize("42").unwrap(), vec![Op::Push(BigInt::from(42))]);
     }
 
     #[test]
     fn tokenize_negative_number() {
-        assert_eq!(tokenize("_42").unwrap(), vec![Op::Push(-42.0)]);
+        assert_eq!(tokenize("_42").unwrap(), vec![Op::Push(BigInt::from(-42))]);
     }
 
-    #[test]
-    fn tokenize_floating_number() {
-        assert_eq!(tokenize("3.1415").unwrap(), vec![Op::Push(3.1415)]);
-    }
-
-    #[test]
-    fn tokenize_negative_floating_number() {
-        assert_eq!(tokenize("_3.1415").unwrap(), vec![Op::Push(-3.1415)]);
-    }
+    // TODO
+    // #[test]
+    // fn tokenize_floating_number() {
+    //     assert_eq!(tokenize("3.1415").unwrap(), vec![Op::Push(BigInt::from(3.1415))]);
+    // }
+    //
+    // #[test]
+    // fn tokenize_negative_floating_number() {
+    //     assert_eq!(tokenize("_3.1415").unwrap(), vec![Op::Push(BigInt::from(-3.1415))]);
+    // }
 
     #[test]
     fn tokenize_leading_zero_number() {
-        assert_eq!(tokenize("04").unwrap(), vec![Op::Push(4f64)]);
+        assert_eq!(tokenize("04").unwrap(), vec![Op::Push(BigInt::from(4))]);
     }
 
     #[test]
@@ -159,7 +167,7 @@ mod test {
     #[test]
     fn tokenize_multiple() {
         let expected = vec![
-            Op::Push(42.0),
+            Op::Push(BigInt::from(42)),
             Op::Duplicate,
             Op::Mul,
             Op::PrintPeek,

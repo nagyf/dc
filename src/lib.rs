@@ -1,4 +1,6 @@
 extern crate clap;
+extern crate num_bigint;
+extern crate num_traits;
 
 pub mod calculator;
 mod token;
@@ -61,7 +63,7 @@ fn process_op(calculator: &mut Calculator, op: &Op) -> Result<OpResult, String> 
             });
 
             if let Some(num) = value {
-                let stack_value = StackValue::Number(*num);
+                let stack_value = StackValue::Number(num.clone());
                 calculator.push(stack_value)
             } else {
                 Ok(OpResult::Ok)
@@ -77,7 +79,7 @@ fn process_op(calculator: &mut Calculator, op: &Op) -> Result<OpResult, String> 
         Op::Exp => calculator.exp(),
         Op::Sqrt => calculator.sqrt(),
         Op::ModExp => calculator.mod_exp(),
-        Op::Push(num) => calculator.push(StackValue::Number(*num)),
+        Op::Push(num) => calculator.push(StackValue::Number(num.clone())),
     }
 }
 
@@ -85,6 +87,7 @@ fn process_op(calculator: &mut Calculator, op: &Op) -> Result<OpResult, String> 
 mod test {
     use crate::calculator::{Calculator, StackValue};
     use crate::process_input;
+    use num_bigint::BigInt;
 
     #[test]
     fn test_execution_empty() {
@@ -105,7 +108,7 @@ mod test {
         let mut calculator = Calculator::new();
         // sqrt((((5 * 5 + 10) - 2) / 2) ^ 2)
         process_input(&mut calculator, "5d*5+10-2/2^v").unwrap();
-        assert_eq!(*calculator.peek().unwrap(), StackValue::Number(10.0));
+        assert_eq!(*calculator.peek().unwrap(), StackValue::Number(BigInt::from(10)));
     }
 
     #[test]
@@ -113,13 +116,13 @@ mod test {
         let mut calculator = Calculator::new();
         // sqrt((((5 * 5 + 10) - 2) / 2) ^ 2)
         process_input(&mut calculator, "   5 d * 5 + 10 - 2 / 2 ^ v     ").unwrap();
-        assert_eq!(*calculator.peek().unwrap(), StackValue::Number(10.0));
+        assert_eq!(*calculator.peek().unwrap(), StackValue::Number(BigInt::from(10)));
     }
 
     #[test]
     fn test_execution_duplicate() {
         let mut calculator = Calculator::new();
         process_input(&mut calculator, "5d*").unwrap();
-        assert_eq!(*calculator.peek().unwrap(), StackValue::Number(25.0));
+        assert_eq!(*calculator.peek().unwrap(), StackValue::Number(BigInt::from(25)));
     }
 }

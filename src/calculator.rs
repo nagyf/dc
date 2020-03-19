@@ -2,6 +2,11 @@ use std::collections::linked_list::Iter;
 use std::collections::LinkedList;
 use std::fmt;
 use std::ops::Div;
+use num_bigint::BigInt;
+use core::ops::Rem;
+use num_traits::pow::Pow;
+use num_traits::identities::{Zero, One};
+use num_traits::ToPrimitive;
 
 #[derive(Debug, Copy, Clone, PartialEq)]
 pub enum OpResult {
@@ -9,9 +14,9 @@ pub enum OpResult {
     Exit,
 }
 
-#[derive(Debug, Copy, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum StackValue {
-    Number(f64),
+    Number(BigInt),
 }
 
 impl fmt::Display for StackValue {
@@ -41,26 +46,27 @@ impl Calculator {
 
     pub fn get_input_radix(&mut self) -> Result<OpResult, String> {
         self.stack
-            .push_back(StackValue::Number(self.input_radix as f64));
+            .push_back(StackValue::Number(BigInt::from(self.input_radix.clone())));
         Ok(OpResult::Ok)
     }
 
     pub fn get_output_radix(&mut self) -> Result<OpResult, String> {
         self.stack
-            .push_back(StackValue::Number(self.output_radix as f64));
+            .push_back(StackValue::Number(BigInt::from(self.output_radix.clone())));
         Ok(OpResult::Ok)
     }
 
     pub fn get_precision(&mut self) -> Result<OpResult, String> {
         self.stack
-            .push_back(StackValue::Number(self.precision as f64));
+            .push_back(StackValue::Number(BigInt::from(self.precision.clone())));
         Ok(OpResult::Ok)
     }
 
     pub fn set_input_radix(&mut self) -> Result<OpResult, String> {
         self.arg1_f64()
             .map(|value| {
-                self.input_radix = value as u8;
+                // TODO error handling
+                self.input_radix = value.to_u8().unwrap();
             })
             .map(|_| OpResult::Ok)
     }
@@ -68,7 +74,8 @@ impl Calculator {
     pub fn set_output_radix(&mut self) -> Result<OpResult, String> {
         self.arg1_f64()
             .map(|value| {
-                self.output_radix = value as u8;
+                // TODO error handling
+                self.output_radix = value.to_u8().unwrap();
             })
             .map(|_| OpResult::Ok)
     }
@@ -76,7 +83,8 @@ impl Calculator {
     pub fn set_precision(&mut self) -> Result<OpResult, String> {
         self.arg1_f64()
             .map(|value| {
-                self.precision = value as u8;
+                // TODO error handling
+                self.precision = value.to_u8().unwrap();
             })
             .map(|_| OpResult::Ok)
     }
@@ -133,7 +141,7 @@ impl Calculator {
     pub fn div(&mut self) -> Result<OpResult, String> {
         self.arg2_f64()
             .and_then(|(x, y)| {
-                if y == 0f64 {
+                if y == BigInt::from(0) {
                     Err("division by zero".to_owned())
                 } else {
                     Ok((x, y))
@@ -150,23 +158,24 @@ impl Calculator {
     pub fn div_rem(&mut self) -> Result<OpResult, String> {
         self.arg2_f64()
             .and_then(|(x, y)| {
-                if y == 0f64 {
+                if y == BigInt::from(0) {
                     Err("division by zero".to_owned())
                 } else {
                     Ok((x, y))
                 }
             })
             .and_then(|(x, y)| {
-                let div = x.div(y).floor();
-                let rem = x % y;
+                let div = x.clone().div(&y);
+                let rem = x.clone().rem(&y);
                 self.push(StackValue::Number(rem))?;
                 self.push(StackValue::Number(div))
             })
     }
 
     pub fn exp(&mut self) -> Result<OpResult, String> {
+        // TODO error handling
         self.arg2_f64()
-            .and_then(|(x, y)| self.push(StackValue::Number(x.powf(y))))
+            .and_then(|(x, y)| self.push(StackValue::Number(x.pow(&y.to_biguint().unwrap()))))
     }
 
     pub fn sqrt(&mut self) -> Result<OpResult, String> {
@@ -177,30 +186,37 @@ impl Calculator {
     pub fn mod_exp(&mut self) -> Result<OpResult, String> {
         self.arg3_f64()
             .and_then(|(base, exponent, modulus)| {
-                if modulus <= 0.0 || modulus != modulus.trunc() {
-                    Err("base must be non-zero and an integer".to_owned())
-                } else if exponent < 0.0 {
-                    Err("exponent must be non-negative and an integer".to_owned())
-                } else if base != base.trunc() {
-                    Err("modulus must be an integer".to_owned())
-                } else {
-                    Ok((base as i64, exponent as i64, modulus as i64))
-                }
+                // TODO
+                // if modulus <= BigInt::from(0) || modulus != modulus.trunc() {
+                //     Err("base must be non-zero and an integer".to_owned())
+                // } else if exponent < BigInt::from(0) {
+                //     Err("exponent must be non-negative and an integer".to_owned())
+                // } else if base != base.trunc() {
+                //     Err("modulus must be an integer".to_owned())
+                // } else {
+                //     Ok((base, exponent, modulus))
+                // }
+
+                Ok((base, exponent, modulus))
             })
             .and_then(|(base, exponent, modulus)| {
-                if modulus == 1 {
-                    self.push(StackValue::Number(0f64))
+                if modulus == BigInt::one() {
+                    self.push(StackValue::Number(BigInt::zero()))
                 } else {
                     let mut c = 1;
-                    for _ in 0..exponent {
+                    // TODO error handling
+                    let base = base.to_u64().unwrap();
+                    let exponent = exponent.to_u64().unwrap();
+                    let modulus = modulus.to_u64().unwrap();
+                    for _ in 0..exponent.to_u64().unwrap() {
                         c = (c * base) % modulus;
                     }
-                    self.push(StackValue::Number(c as f64))
+                    self.push(StackValue::Number(BigInt::from(c)))
                 }
             })
     }
 
-    fn arg1_f64(&mut self) -> Result<f64, String> {
+    fn arg1_f64(&mut self) -> Result<BigInt, String> {
         if self.stack.len() >= 1 {
             let StackValue::Number(x) = self.stack.pop_back().unwrap();
             Ok(x)
@@ -209,7 +225,7 @@ impl Calculator {
         }
     }
 
-    fn arg2_f64(&mut self) -> Result<(f64, f64), String> {
+    fn arg2_f64(&mut self) -> Result<(BigInt, BigInt), String> {
         if self.stack.len() >= 2 {
             let StackValue::Number(y) = self.stack.pop_back().unwrap();
             let StackValue::Number(x) = self.stack.pop_back().unwrap();
@@ -219,7 +235,7 @@ impl Calculator {
         }
     }
 
-    fn arg3_f64(&mut self) -> Result<(f64, f64, f64), String> {
+    fn arg3_f64(&mut self) -> Result<(BigInt, BigInt, BigInt), String> {
         if self.stack.len() >= 3 {
             let StackValue::Number(z) = self.stack.pop_back().unwrap();
             let StackValue::Number(y) = self.stack.pop_back().unwrap();
@@ -234,7 +250,8 @@ impl Calculator {
 #[cfg(test)]
 mod test {
     use crate::calculator::*;
-
+    use num_bigint::BigInt;
+    
     #[test]
     fn test_new() {
         let calculator = Calculator::new();
@@ -248,17 +265,17 @@ mod test {
     fn test_push() {
         let mut calculator = Calculator::new();
         assert_eq!(calculator.stack.len(), 0);
-        calculator.push(StackValue::Number(42.0)).unwrap();
+        calculator.push(StackValue::Number(BigInt::from(42))).unwrap();
         assert_eq!(calculator.stack.len(), 1);
-        assert_eq!(*calculator.stack.back().unwrap(), StackValue::Number(42.0));
+        assert_eq!(*calculator.stack.back().unwrap(), StackValue::Number(BigInt::from(42)));
     }
 
     #[test]
     fn test_pop() {
         let mut calculator = Calculator::new();
-        calculator.stack.push_back(StackValue::Number(42.0));
+        calculator.stack.push_back(StackValue::Number(BigInt::from(42)));
         assert_eq!(calculator.stack.len(), 1);
-        assert_eq!(calculator.pop(), Some(StackValue::Number(42.0)));
+        assert_eq!(calculator.pop(), Some(StackValue::Number(BigInt::from(42))));
         assert_eq!(calculator.stack.len(), 0);
     }
 
@@ -273,9 +290,9 @@ mod test {
     #[test]
     fn test_peek() {
         let mut calculator = Calculator::new();
-        calculator.stack.push_back(StackValue::Number(42.0));
+        calculator.stack.push_back(StackValue::Number(BigInt::from(42)));
         assert_eq!(calculator.stack.len(), 1);
-        assert_eq!(calculator.peek(), Some(&StackValue::Number(42.0)));
+        assert_eq!(calculator.peek(), Some(&StackValue::Number(BigInt::from(42))));
         assert_eq!(calculator.stack.len(), 1);
     }
 
@@ -290,24 +307,24 @@ mod test {
     #[test]
     fn test_iter() {
         let mut calculator = Calculator::new();
-        calculator.stack.push_back(StackValue::Number(1.0));
-        calculator.stack.push_back(StackValue::Number(2.0));
-        calculator.stack.push_back(StackValue::Number(3.0));
+        calculator.stack.push_back(StackValue::Number(BigInt::from(1)));
+        calculator.stack.push_back(StackValue::Number(BigInt::from(2)));
+        calculator.stack.push_back(StackValue::Number(BigInt::from(3)));
 
         let mut result = Vec::new();
         for StackValue::Number(i) in calculator.iter() {
-            result.push(*i);
+            result.push(i.clone());
         }
 
-        assert_eq!(result, vec![1.0, 2.0, 3.0]);
+        assert_eq!(result, vec![BigInt::from(1), BigInt::from(2), BigInt::from(3)]);
     }
 
     #[test]
     fn test_clear() {
         let mut calculator = Calculator::new();
-        calculator.stack.push_back(StackValue::Number(1.0));
-        calculator.stack.push_back(StackValue::Number(2.0));
-        calculator.stack.push_back(StackValue::Number(3.0));
+        calculator.stack.push_back(StackValue::Number(BigInt::from(1)));
+        calculator.stack.push_back(StackValue::Number(BigInt::from(2)));
+        calculator.stack.push_back(StackValue::Number(BigInt::from(3)));
         assert_eq!(calculator.stack.len(), 3);
         calculator.clear().unwrap();
         assert_eq!(calculator.stack.len(), 0);
@@ -324,104 +341,104 @@ mod test {
     #[test]
     fn test_reverse() {
         let mut calculator = Calculator::new();
-        calculator.stack.push_back(StackValue::Number(4.0));
-        calculator.stack.push_back(StackValue::Number(5.0));
+        calculator.stack.push_back(StackValue::Number(BigInt::from(4)));
+        calculator.stack.push_back(StackValue::Number(BigInt::from(5)));
         calculator.reverse().unwrap();
         assert_eq!(calculator.stack.len(), 2);
-        assert_eq!(*calculator.stack.front().unwrap(), StackValue::Number(5.0));
-        assert_eq!(*calculator.stack.back().unwrap(), StackValue::Number(4.0));
+        assert_eq!(*calculator.stack.front().unwrap(), StackValue::Number(BigInt::from(5)));
+        assert_eq!(*calculator.stack.back().unwrap(), StackValue::Number(BigInt::from(4)));
     }
 
     #[test]
     fn test_reverse_singleton() {
         let mut calculator = Calculator::new();
-        calculator.stack.push_back(StackValue::Number(4.0));
+        calculator.stack.push_back(StackValue::Number(BigInt::from(4)));
         calculator.reverse().unwrap();
         assert_eq!(calculator.stack.len(), 1);
-        assert_eq!(*calculator.stack.back().unwrap(), StackValue::Number(4.0));
+        assert_eq!(*calculator.stack.back().unwrap(), StackValue::Number(BigInt::from(4)));
     }
 
     #[test]
     fn test_add() {
         let mut calculator = Calculator::new();
-        calculator.stack.push_back(StackValue::Number(4.0));
-        calculator.stack.push_back(StackValue::Number(5.0));
+        calculator.stack.push_back(StackValue::Number(BigInt::from(4)));
+        calculator.stack.push_back(StackValue::Number(BigInt::from(5)));
         calculator.add().unwrap();
         assert_eq!(calculator.stack.len(), 1);
-        assert_eq!(*calculator.stack.back().unwrap(), StackValue::Number(9.0));
+        assert_eq!(*calculator.stack.back().unwrap(), StackValue::Number(BigInt::from(9)));
     }
 
     #[test]
     fn test_sub() {
         let mut calculator = Calculator::new();
-        calculator.stack.push_back(StackValue::Number(4.0));
-        calculator.stack.push_back(StackValue::Number(5.0));
+        calculator.stack.push_back(StackValue::Number(BigInt::from(4)));
+        calculator.stack.push_back(StackValue::Number(BigInt::from(5)));
         calculator.sub().unwrap();
         assert_eq!(calculator.stack.len(), 1);
-        assert_eq!(*calculator.stack.back().unwrap(), StackValue::Number(-1.0));
+        assert_eq!(*calculator.stack.back().unwrap(), StackValue::Number(BigInt::from(-1)));
     }
 
     #[test]
     fn test_mul() {
         let mut calculator = Calculator::new();
-        calculator.stack.push_back(StackValue::Number(4.0));
-        calculator.stack.push_back(StackValue::Number(5.0));
+        calculator.stack.push_back(StackValue::Number(BigInt::from(4)));
+        calculator.stack.push_back(StackValue::Number(BigInt::from(5)));
         calculator.mul().unwrap();
         assert_eq!(calculator.stack.len(), 1);
-        assert_eq!(*calculator.stack.back().unwrap(), StackValue::Number(20.0));
+        assert_eq!(*calculator.stack.back().unwrap(), StackValue::Number(BigInt::from(20)));
     }
 
     #[test]
     fn test_div() {
         let mut calculator = Calculator::new();
-        calculator.stack.push_back(StackValue::Number(20.0));
-        calculator.stack.push_back(StackValue::Number(5.0));
+        calculator.stack.push_back(StackValue::Number(BigInt::from(20)));
+        calculator.stack.push_back(StackValue::Number(BigInt::from(5)));
         calculator.div().unwrap();
         assert_eq!(calculator.stack.len(), 1);
-        assert_eq!(*calculator.stack.back().unwrap(), StackValue::Number(4.0));
+        assert_eq!(*calculator.stack.back().unwrap(), StackValue::Number(BigInt::from(4)));
     }
 
     #[test]
     fn test_modulo() {
         let mut calculator = Calculator::new();
-        calculator.stack.push_back(StackValue::Number(10.0));
-        calculator.stack.push_back(StackValue::Number(6.0));
+        calculator.stack.push_back(StackValue::Number(BigInt::from(10)));
+        calculator.stack.push_back(StackValue::Number(BigInt::from(6)));
         calculator.modulo().unwrap();
         assert_eq!(calculator.stack.len(), 1);
-        assert_eq!(*calculator.stack.back().unwrap(), StackValue::Number(4.0));
+        assert_eq!(*calculator.stack.back().unwrap(), StackValue::Number(BigInt::from(4)));
     }
 
     #[test]
     fn test_div_rem() {
         let mut calculator = Calculator::new();
-        calculator.stack.push_back(StackValue::Number(10.0));
-        calculator.stack.push_back(StackValue::Number(6.0));
+        calculator.stack.push_back(StackValue::Number(BigInt::from(10)));
+        calculator.stack.push_back(StackValue::Number(BigInt::from(6)));
         calculator.div_rem().unwrap();
         assert_eq!(calculator.stack.len(), 2);
-        assert_eq!(*calculator.stack.front().unwrap(), StackValue::Number(4.0));
-        assert_eq!(*calculator.stack.back().unwrap(), StackValue::Number(1.0));
+        assert_eq!(*calculator.stack.front().unwrap(), StackValue::Number(BigInt::from(4)));
+        assert_eq!(*calculator.stack.back().unwrap(), StackValue::Number(BigInt::from(1)));
     }
 
     #[test]
     fn test_exp() {
         let mut calculator = Calculator::new();
-        calculator.stack.push_back(StackValue::Number(2.0));
-        calculator.stack.push_back(StackValue::Number(10.0));
+        calculator.stack.push_back(StackValue::Number(BigInt::from(2)));
+        calculator.stack.push_back(StackValue::Number(BigInt::from(10)));
         calculator.exp().unwrap();
         assert_eq!(calculator.stack.len(), 1);
         assert_eq!(
             *calculator.stack.back().unwrap(),
-            StackValue::Number(1024.0)
+            StackValue::Number(BigInt::from(1024))
         );
     }
 
     #[test]
     fn test_sqrt() {
         let mut calculator = Calculator::new();
-        calculator.stack.push_back(StackValue::Number(10_000.0));
+        calculator.stack.push_back(StackValue::Number(BigInt::from(10_000)));
         calculator.sqrt().unwrap();
         assert_eq!(calculator.stack.len(), 1);
-        assert_eq!(*calculator.stack.back().unwrap(), StackValue::Number(100.0));
+        assert_eq!(*calculator.stack.back().unwrap(), StackValue::Number(BigInt::from(100)));
     }
 
     #[test]
@@ -429,12 +446,12 @@ mod test {
         // https://en.wikipedia.org/wiki/Modular_exponentiation
 
         let mut calculator = Calculator::new();
-        calculator.stack.push_back(StackValue::Number(4.0));
-        calculator.stack.push_back(StackValue::Number(13.0));
-        calculator.stack.push_back(StackValue::Number(497.0));
+        calculator.stack.push_back(StackValue::Number(BigInt::from(4)));
+        calculator.stack.push_back(StackValue::Number(BigInt::from(13)));
+        calculator.stack.push_back(StackValue::Number(BigInt::from(497)));
         calculator.mod_exp().unwrap();
         assert_eq!(calculator.stack.len(), 1);
-        assert_eq!(*calculator.stack.back().unwrap(), StackValue::Number(445.0));
+        assert_eq!(*calculator.stack.back().unwrap(), StackValue::Number(BigInt::from(445)));
     }
 
     #[test]
@@ -444,7 +461,7 @@ mod test {
         assert_eq!(calculator.stack.len(), 1);
         assert_eq!(
             *calculator.stack.back().unwrap(),
-            StackValue::Number(calculator.input_radix as f64)
+            StackValue::Number(BigInt::from(calculator.input_radix))
         );
     }
 
@@ -455,7 +472,7 @@ mod test {
         assert_eq!(calculator.stack.len(), 1);
         assert_eq!(
             *calculator.stack.back().unwrap(),
-            StackValue::Number(calculator.output_radix as f64)
+            StackValue::Number(BigInt::from(calculator.output_radix))
         );
     }
 
@@ -466,14 +483,14 @@ mod test {
         assert_eq!(calculator.stack.len(), 1);
         assert_eq!(
             *calculator.stack.back().unwrap(),
-            StackValue::Number(calculator.precision as f64)
+            StackValue::Number(BigInt::from(calculator.precision))
         );
     }
 
     #[test]
     fn test_set_input_radix() {
         let mut calculator = Calculator::new();
-        calculator.push(StackValue::Number(42f64)).unwrap();
+        calculator.push(StackValue::Number(BigInt::from(42))).unwrap();
         calculator.set_input_radix().unwrap();
         assert_eq!(calculator.stack.len(), 0);
         assert_eq!(calculator.input_radix, 42);
@@ -484,7 +501,7 @@ mod test {
     #[test]
     fn test_set_output_radix() {
         let mut calculator = Calculator::new();
-        calculator.push(StackValue::Number(42f64)).unwrap();
+        calculator.push(StackValue::Number(BigInt::from(42))).unwrap();
         calculator.set_output_radix().unwrap();
         assert_eq!(calculator.stack.len(), 0);
         assert_eq!(calculator.input_radix, 10);
@@ -495,11 +512,22 @@ mod test {
     #[test]
     fn test_set_precision() {
         let mut calculator = Calculator::new();
-        calculator.push(StackValue::Number(42f64)).unwrap();
+        calculator.push(StackValue::Number(BigInt::from(42))).unwrap();
         calculator.set_precision().unwrap();
         assert_eq!(calculator.stack.len(), 0);
         assert_eq!(calculator.input_radix, 10);
         assert_eq!(calculator.output_radix, 10);
         assert_eq!(calculator.precision, 42);
+    }
+
+    #[test]
+    fn test_bignum() {
+        let mut calculator = Calculator::new();
+        let bignum = "123456789123456789".as_bytes();
+        let expected = BigInt::parse_bytes("15241578780673678515622620750190521".as_bytes(), 10).unwrap();
+        calculator.push(StackValue::Number(BigInt::parse_bytes(bignum, 10).unwrap())).unwrap();
+        calculator.push(StackValue::Number(BigInt::from(2))).unwrap();
+        calculator.exp().unwrap();
+        assert_eq!(&StackValue::Number(expected), calculator.peek().unwrap());
     }
 }
