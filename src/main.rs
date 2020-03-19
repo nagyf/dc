@@ -1,6 +1,6 @@
-use dc::calculator::Calculator;
-use dc::{process_input, OpResult};
 use clap::{App, Arg, ArgMatches};
+use dc::calculator::{Calculator, OpResult};
+use dc::process_input;
 
 fn main() {
     let matches = parse_arguments();
@@ -56,11 +56,9 @@ fn repl(mut calculator: &mut Calculator) {
         stdin.read_line(&mut buffer).unwrap();
 
         match process_input(&mut calculator, buffer.trim().as_ref()) {
-            Ok(result) => {
-                match result {
-                    OpResult::Exit => break,
-                    _ => ()
-                }
+            Ok(result) => match result {
+                OpResult::Exit => break,
+                _ => (),
             },
             Err(err) => {
                 println!("Error: {}", err);

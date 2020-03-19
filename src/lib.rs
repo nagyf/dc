@@ -3,14 +3,9 @@ extern crate clap;
 pub mod calculator;
 mod token;
 
-use std::io::Write;
-use crate::calculator::{Calculator, StackValue};
+use crate::calculator::{Calculator, OpResult, StackValue};
 use crate::token::{tokenize, Op};
-
-pub enum OpResult {
-    Ok,
-    Exit
-}
+use std::io::Write;
 
 pub fn process_input(stack: &mut Calculator, str: &str) -> Result<OpResult, String> {
     let tokens = str
@@ -24,7 +19,7 @@ pub fn process_input(stack: &mut Calculator, str: &str) -> Result<OpResult, Stri
         match process_op(stack, &op) {
             Ok(OpResult::Exit) => return Ok(OpResult::Exit),
             Ok(_) => (),
-            Err(err) => println!("{}", err)
+            Err(err) => println!("{}", err),
         };
     }
 
@@ -33,102 +28,56 @@ pub fn process_input(stack: &mut Calculator, str: &str) -> Result<OpResult, Stri
 
 fn process_op(calculator: &mut Calculator, op: &Op) -> Result<OpResult, String> {
     match op {
-        Op::GetInputRadix => {
-            calculator.get_input_radix();
-            Ok(OpResult::Ok)
-        },
-        Op::GetOutputRadix => {
-            calculator.get_output_radix();
-            Ok(OpResult::Ok)
-        },
-        Op::GetPrecision => {
-            calculator.get_precision();
-            Ok(OpResult::Ok)
-        },
-        Op::SetInputRadix => {
-            calculator.set_input_radix().and(Ok(OpResult::Ok))
-        },
-        Op::SetOutputRadix => {
-            calculator.set_output_radix().and(Ok(OpResult::Ok))
-        },
-        Op::SetPrecision => {
-            calculator.set_precision().and(Ok(OpResult::Ok))
-        },
-        Op::Exit => {
-            Ok(OpResult::Exit)
-        }
-        Op::PrintPeek => {
-            calculator.peek()
-                .map(|value| {
-                    println!("{}", value);
-                    OpResult::Ok
-                })
-                .ok_or("stack empty!".to_owned())
-        }
-        Op::Clear => {
-            calculator.clear();
-            Ok(OpResult::Ok)
-        }
+        Op::GetInputRadix => calculator.get_input_radix(),
+        Op::GetOutputRadix => calculator.get_output_radix(),
+        Op::GetPrecision => calculator.get_precision(),
+        Op::SetInputRadix => calculator.set_input_radix(),
+        Op::SetOutputRadix => calculator.set_output_radix(),
+        Op::SetPrecision => calculator.set_precision(),
+        Op::Exit => Ok(OpResult::Exit),
+        Op::PrintPeek => calculator
+            .peek()
+            .map(|value| {
+                println!("{}", value);
+                OpResult::Ok
+            })
+            .ok_or("stack empty!".to_owned()),
+        Op::Clear => calculator.clear(),
         Op::PrintAll => {
             calculator.iter().for_each(|value| println!("{}", value));
             Ok(OpResult::Ok)
         }
-        Op::PrintPop => {
-            calculator.pop().map(|value| {
+        Op::PrintPop => calculator
+            .pop()
+            .map(|value| {
                 print!("{}", value);
                 std::io::stdout().flush().unwrap();
                 OpResult::Ok
-            }).ok_or("stack empty!".to_owned())
-        }
+            })
+            .ok_or("stack empty!".to_owned()),
         Op::Duplicate => {
-            let value = calculator.peek().and_then(|value| {
-                match value {
-                    StackValue::Number(num) => Some(num)
-                }
+            let value = calculator.peek().and_then(|value| match value {
+                StackValue::Number(num) => Some(num),
             });
 
             if let Some(num) = value {
                 let stack_value = StackValue::Number(*num);
-                calculator.push(stack_value);
+                calculator.push(stack_value)
+            } else {
+                Ok(OpResult::Ok)
             }
-
-            Ok(OpResult::Ok)
         }
-        Op::Reverse => {
-            calculator.reverse();
-            Ok(OpResult::Ok)
-        }
-        Op::Add => {
-            calculator.add().and(Ok(OpResult::Ok))
-        }
-        Op::Sub => {
-            calculator.sub().and(Ok(OpResult::Ok))
-        }
-        Op::Mul => {
-            calculator.mul().and(Ok(OpResult::Ok))
-        }
-        Op::Div => {
-            calculator.div().and(Ok(OpResult::Ok))
-        }
-        Op::Mod => {
-            calculator.modulo().and(Ok(OpResult::Ok))
-        }
-        Op::DivRem => {
-            calculator.div_rem().and(Ok(OpResult::Ok))
-        }
-        Op::Exp => {
-            calculator.exp().and(Ok(OpResult::Ok))
-        }
-        Op::Sqrt => {
-            calculator.sqrt().and(Ok(OpResult::Ok))
-        }
-        Op::ModExp => {
-            calculator.mod_exp().and(Ok(OpResult::Ok))
-        }
-        Op::Push(num) => {
-            calculator.push(StackValue::Number(*num));
-            Ok(OpResult::Ok)
-        }
+        Op::Reverse => calculator.reverse(),
+        Op::Add => calculator.add(),
+        Op::Sub => calculator.sub(),
+        Op::Mul => calculator.mul(),
+        Op::Div => calculator.div(),
+        Op::Mod => calculator.modulo(),
+        Op::DivRem => calculator.div_rem(),
+        Op::Exp => calculator.exp(),
+        Op::Sqrt => calculator.sqrt(),
+        Op::ModExp => calculator.mod_exp(),
+        Op::Push(num) => calculator.push(StackValue::Number(*num)),
     }
 }
 

@@ -1,17 +1,23 @@
+use std::collections::linked_list::Iter;
 use std::collections::LinkedList;
 use std::fmt;
-use std::collections::linked_list::Iter;
 use std::ops::Div;
 
 #[derive(Debug, Copy, Clone, PartialEq)]
+pub enum OpResult {
+    Ok,
+    Exit,
+}
+
+#[derive(Debug, Copy, Clone, PartialEq)]
 pub enum StackValue {
-    Number(f64)
+    Number(f64),
 }
 
 impl fmt::Display for StackValue {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            StackValue::Number(x) => write!(f, "{}", x)
+            StackValue::Number(x) => write!(f, "{}", x),
         }
     }
 }
@@ -20,7 +26,7 @@ pub struct Calculator {
     stack: LinkedList<StackValue>,
     input_radix: u8,
     output_radix: u8,
-    precision: u8
+    precision: u8,
 }
 
 impl Calculator {
@@ -29,46 +35,59 @@ impl Calculator {
             stack: LinkedList::new(),
             input_radix: 10,
             output_radix: 10,
-            precision: 0
+            precision: 0,
         }
     }
 
-    pub fn get_input_radix(&mut self) {
-        self.stack.push_back(StackValue::Number(self.input_radix as f64));
+    pub fn get_input_radix(&mut self) -> Result<OpResult, String> {
+        self.stack
+            .push_back(StackValue::Number(self.input_radix as f64));
+        Ok(OpResult::Ok)
     }
 
-    pub fn get_output_radix(&mut self) {
-        self.stack.push_back(StackValue::Number(self.output_radix as f64));
+    pub fn get_output_radix(&mut self) -> Result<OpResult, String> {
+        self.stack
+            .push_back(StackValue::Number(self.output_radix as f64));
+        Ok(OpResult::Ok)
     }
 
-    pub fn get_precision(&mut self) {
-        self.stack.push_back(StackValue::Number(self.precision as f64));
+    pub fn get_precision(&mut self) -> Result<OpResult, String> {
+        self.stack
+            .push_back(StackValue::Number(self.precision as f64));
+        Ok(OpResult::Ok)
     }
 
-    pub fn set_input_radix(&mut self) -> Result<(), String> {
-        self.arg1_f64().map(|value| {
-            self.input_radix = value as u8;
-        })
+    pub fn set_input_radix(&mut self) -> Result<OpResult, String> {
+        self.arg1_f64()
+            .map(|value| {
+                self.input_radix = value as u8;
+            })
+            .map(|_| OpResult::Ok)
     }
 
-    pub fn set_output_radix(&mut self) -> Result<(), String> {
-        self.arg1_f64().map(|value| {
-            self.output_radix = value as u8;
-        })
+    pub fn set_output_radix(&mut self) -> Result<OpResult, String> {
+        self.arg1_f64()
+            .map(|value| {
+                self.output_radix = value as u8;
+            })
+            .map(|_| OpResult::Ok)
     }
 
-    pub fn set_precision(&mut self) -> Result<(), String> {
-        self.arg1_f64().map(|value| {
-            self.precision = value as u8;
-        })
+    pub fn set_precision(&mut self) -> Result<OpResult, String> {
+        self.arg1_f64()
+            .map(|value| {
+                self.precision = value as u8;
+            })
+            .map(|_| OpResult::Ok)
     }
 
     pub fn iter(&self) -> Iter<StackValue> {
         self.stack.iter()
     }
 
-    pub fn push(&mut self, value: StackValue) {
+    pub fn push(&mut self, value: StackValue) -> Result<OpResult, String> {
         self.stack.push_back(value);
+        Ok(OpResult::Ok)
     }
 
     pub fn pop(&mut self) -> Option<StackValue> {
@@ -79,11 +98,12 @@ impl Calculator {
         self.stack.back()
     }
 
-    pub fn clear(&mut self) {
+    pub fn clear(&mut self) -> Result<OpResult, String> {
         self.stack.clear();
+        Ok(OpResult::Ok)
     }
 
-    pub fn reverse(&mut self) {
+    pub fn reverse(&mut self) -> Result<OpResult, String> {
         if self.stack.len() >= 2 {
             let first = self.stack.pop_back().unwrap();
             let second = self.stack.pop_back().unwrap();
@@ -91,68 +111,70 @@ impl Calculator {
             self.stack.push_back(first);
             self.stack.push_back(second);
         }
+
+        Ok(OpResult::Ok)
     }
 
-    pub fn add(&mut self) -> Result<(), String> {
-        self.arg2_f64().map(|(x,y)| {
-            self.push(StackValue::Number(x + y));
-        })
+    pub fn add(&mut self) -> Result<OpResult, String> {
+        self.arg2_f64()
+            .and_then(|(x, y)| self.push(StackValue::Number(x + y)))
     }
 
-    pub fn sub(&mut self) -> Result<(), String> {
-        self.arg2_f64().map(|(x,y)| {
-            self.push(StackValue::Number(x - y));
-        })
+    pub fn sub(&mut self) -> Result<OpResult, String> {
+        self.arg2_f64()
+            .and_then(|(x, y)| self.push(StackValue::Number(x - y)))
     }
 
-    pub fn mul(&mut self) -> Result<(), String> {
-        self.arg2_f64().map(|(x,y)| {
-            self.push(StackValue::Number(x * y));
-        })
+    pub fn mul(&mut self) -> Result<OpResult, String> {
+        self.arg2_f64()
+            .and_then(|(x, y)| self.push(StackValue::Number(x * y)))
     }
 
-    pub fn div(&mut self) -> Result<(), String> {
+    pub fn div(&mut self) -> Result<OpResult, String> {
         self.arg2_f64()
             .and_then(|(x, y)| {
-                if y == 0f64 { Err("division by zero".to_owned()) } else { Ok((x, y)) }
+                if y == 0f64 {
+                    Err("division by zero".to_owned())
+                } else {
+                    Ok((x, y))
+                }
             })
-            .map(|(x,y)| {
-                self.push(StackValue::Number(x / y));
-            })
+            .and_then(|(x, y)| self.push(StackValue::Number(x / y)))
     }
 
-    pub fn modulo(&mut self) -> Result<(), String> {
-        self.arg2_f64().map(|(x,y)| {
-            self.push(StackValue::Number(x % y));
-        })
+    pub fn modulo(&mut self) -> Result<OpResult, String> {
+        self.arg2_f64()
+            .and_then(|(x, y)| self.push(StackValue::Number(x % y)))
     }
 
-    pub fn div_rem(&mut self) -> Result<(), String> {
+    pub fn div_rem(&mut self) -> Result<OpResult, String> {
         self.arg2_f64()
             .and_then(|(x, y)| {
-                if y == 0f64 { Err("division by zero".to_owned()) } else { Ok((x, y)) }
+                if y == 0f64 {
+                    Err("division by zero".to_owned())
+                } else {
+                    Ok((x, y))
+                }
             })
-            .map(|(x,y)| {
+            .and_then(|(x, y)| {
                 let div = x.div(y).floor();
                 let rem = x % y;
-                self.push(StackValue::Number(rem));
-                self.push(StackValue::Number(div));
+                self.push(StackValue::Number(rem))?;
+                self.push(StackValue::Number(div))
             })
     }
 
-    pub fn exp(&mut self) -> Result<(), String> {
-        self.arg2_f64().map(|(x,y)| {
-            self.push(StackValue::Number(x.powf(y)));
-        })
+    pub fn exp(&mut self) -> Result<OpResult, String> {
+        self.arg2_f64()
+            .and_then(|(x, y)| self.push(StackValue::Number(x.powf(y))))
     }
 
-    pub fn sqrt(&mut self) -> Result<(), String> {
-        self.arg1_f64().map(|x| {
-            self.push(StackValue::Number(x.sqrt()));
-        })
+    pub fn sqrt(&mut self) -> Result<OpResult, String> {
+        self.arg1_f64()
+            .and_then(|x| self.push(StackValue::Number(x.sqrt())))
     }
 
-    pub fn mod_exp(&mut self) -> Result<(), String> {
+    pub fn mod_exp(&mut self) -> Result<OpResult, String> {
         self.arg3_f64()
             .and_then(|(base, exponent, modulus)| {
                 if modulus <= 0.0 || modulus != modulus.trunc() {
@@ -165,15 +187,15 @@ impl Calculator {
                     Ok((base as i64, exponent as i64, modulus as i64))
                 }
             })
-            .map(|(base, exponent, modulus)| {
+            .and_then(|(base, exponent, modulus)| {
                 if modulus == 1 {
-                    self.push(StackValue::Number(0f64));
+                    self.push(StackValue::Number(0f64))
                 } else {
                     let mut c = 1;
                     for _ in 0..exponent {
                         c = (c * base) % modulus;
                     }
-                    self.push(StackValue::Number(c as f64));
+                    self.push(StackValue::Number(c as f64))
                 }
             })
     }
@@ -181,7 +203,7 @@ impl Calculator {
     fn arg1_f64(&mut self) -> Result<f64, String> {
         if self.stack.len() >= 1 {
             let StackValue::Number(x) = self.stack.pop_back().unwrap();
-            Ok( x )
+            Ok(x)
         } else {
             Err("stack empty!".to_owned())
         }
@@ -191,7 +213,7 @@ impl Calculator {
         if self.stack.len() >= 2 {
             let StackValue::Number(y) = self.stack.pop_back().unwrap();
             let StackValue::Number(x) = self.stack.pop_back().unwrap();
-            Ok( (x, y) )
+            Ok((x, y))
         } else {
             Err("stack empty!".to_owned())
         }
@@ -202,7 +224,7 @@ impl Calculator {
             let StackValue::Number(z) = self.stack.pop_back().unwrap();
             let StackValue::Number(y) = self.stack.pop_back().unwrap();
             let StackValue::Number(x) = self.stack.pop_back().unwrap();
-            Ok( (x, y, z) )
+            Ok((x, y, z))
         } else {
             Err("stack empty!".to_owned())
         }
@@ -226,7 +248,7 @@ mod test {
     fn test_push() {
         let mut calculator = Calculator::new();
         assert_eq!(calculator.stack.len(), 0);
-        calculator.push(StackValue::Number(42.0));
+        calculator.push(StackValue::Number(42.0)).unwrap();
         assert_eq!(calculator.stack.len(), 1);
         assert_eq!(*calculator.stack.back().unwrap(), StackValue::Number(42.0));
     }
@@ -287,7 +309,7 @@ mod test {
         calculator.stack.push_back(StackValue::Number(2.0));
         calculator.stack.push_back(StackValue::Number(3.0));
         assert_eq!(calculator.stack.len(), 3);
-        calculator.clear();
+        calculator.clear().unwrap();
         assert_eq!(calculator.stack.len(), 0);
     }
 
@@ -295,7 +317,7 @@ mod test {
     fn test_clear_empty() {
         let mut calculator = Calculator::new();
         assert_eq!(calculator.stack.len(), 0);
-        calculator.clear();
+        calculator.clear().unwrap();
         assert_eq!(calculator.stack.len(), 0);
     }
 
@@ -304,7 +326,7 @@ mod test {
         let mut calculator = Calculator::new();
         calculator.stack.push_back(StackValue::Number(4.0));
         calculator.stack.push_back(StackValue::Number(5.0));
-        calculator.reverse();
+        calculator.reverse().unwrap();
         assert_eq!(calculator.stack.len(), 2);
         assert_eq!(*calculator.stack.front().unwrap(), StackValue::Number(5.0));
         assert_eq!(*calculator.stack.back().unwrap(), StackValue::Number(4.0));
@@ -314,7 +336,7 @@ mod test {
     fn test_reverse_singleton() {
         let mut calculator = Calculator::new();
         calculator.stack.push_back(StackValue::Number(4.0));
-        calculator.reverse();
+        calculator.reverse().unwrap();
         assert_eq!(calculator.stack.len(), 1);
         assert_eq!(*calculator.stack.back().unwrap(), StackValue::Number(4.0));
     }
@@ -387,7 +409,10 @@ mod test {
         calculator.stack.push_back(StackValue::Number(10.0));
         calculator.exp().unwrap();
         assert_eq!(calculator.stack.len(), 1);
-        assert_eq!(*calculator.stack.back().unwrap(), StackValue::Number(1024.0));
+        assert_eq!(
+            *calculator.stack.back().unwrap(),
+            StackValue::Number(1024.0)
+        );
     }
 
     #[test]
@@ -415,31 +440,40 @@ mod test {
     #[test]
     fn test_get_input_radix() {
         let mut calculator = Calculator::new();
-        calculator.get_input_radix();
+        calculator.get_input_radix().unwrap();
         assert_eq!(calculator.stack.len(), 1);
-        assert_eq!(*calculator.stack.back().unwrap(), StackValue::Number(calculator.input_radix as f64));
+        assert_eq!(
+            *calculator.stack.back().unwrap(),
+            StackValue::Number(calculator.input_radix as f64)
+        );
     }
 
     #[test]
     fn test_get_output_radix() {
         let mut calculator = Calculator::new();
-        calculator.get_output_radix();
+        calculator.get_output_radix().unwrap();
         assert_eq!(calculator.stack.len(), 1);
-        assert_eq!(*calculator.stack.back().unwrap(), StackValue::Number(calculator.output_radix as f64));
+        assert_eq!(
+            *calculator.stack.back().unwrap(),
+            StackValue::Number(calculator.output_radix as f64)
+        );
     }
 
     #[test]
     fn test_get_precision() {
         let mut calculator = Calculator::new();
-        calculator.get_precision();
+        calculator.get_precision().unwrap();
         assert_eq!(calculator.stack.len(), 1);
-        assert_eq!(*calculator.stack.back().unwrap(), StackValue::Number(calculator.precision as f64));
+        assert_eq!(
+            *calculator.stack.back().unwrap(),
+            StackValue::Number(calculator.precision as f64)
+        );
     }
 
     #[test]
     fn test_set_input_radix() {
         let mut calculator = Calculator::new();
-        calculator.push(StackValue::Number(42f64));
+        calculator.push(StackValue::Number(42f64)).unwrap();
         calculator.set_input_radix().unwrap();
         assert_eq!(calculator.stack.len(), 0);
         assert_eq!(calculator.input_radix, 42);
@@ -450,7 +484,7 @@ mod test {
     #[test]
     fn test_set_output_radix() {
         let mut calculator = Calculator::new();
-        calculator.push(StackValue::Number(42f64));
+        calculator.push(StackValue::Number(42f64)).unwrap();
         calculator.set_output_radix().unwrap();
         assert_eq!(calculator.stack.len(), 0);
         assert_eq!(calculator.input_radix, 10);
@@ -461,7 +495,7 @@ mod test {
     #[test]
     fn test_set_precision() {
         let mut calculator = Calculator::new();
-        calculator.push(StackValue::Number(42f64));
+        calculator.push(StackValue::Number(42f64)).unwrap();
         calculator.set_precision().unwrap();
         assert_eq!(calculator.stack.len(), 0);
         assert_eq!(calculator.input_radix, 10);
